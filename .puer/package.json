@@ -1,0 +1,6 @@
+{
+    "name": "EFramework.Modulize",
+    "module": "index.js",
+    "types": "index.d.ts",
+    "type": "module"
+}
