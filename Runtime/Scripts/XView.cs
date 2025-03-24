@@ -376,6 +376,7 @@ namespace EFramework.Modulize
             public override bool Unreg(int eid, XEvent.Callback callback = null)
             {
                 var ret = true;
+                base.Unreg(eid, callback);
                 if (proxies.TryGetValue(eid, out var list))
                 {
                     if (callback != null)
