@@ -3,140 +3,91 @@
 // license that can be found in the LICENSE file.
 
 #if UNITY_INCLUDE_TESTS
-using System;
 using NUnit.Framework;
 using EFramework.Modulize;
+using UnityEngine.TestTools;
+using UnityEngine;
+using System.Text.RegularExpressions;
+using System;
 
 public class TestXModule
 {
-    private TestModule testModule;
-    private TestSingletonModule testSingletonModule;
+    private XModule.Base testModule;
 
     [SetUp]
     public void Setup()
     {
-        // 准备测试数据
-        testModule = new TestModule();
-        testSingletonModule = new TestSingletonModule();
+        testModule = new XModule.Base();
     }
 
     [TearDown]
     public void Reset()
     {
-        // 清理测试数据
         testModule = null;
-        testSingletonModule = null;
     }
 
     [Test]
     public void Property()
     {
         // 验证基本属性
-        Assert.That(testModule.Name, Is.EqualTo("TestModule"));
-        Assert.That(testModule.Enabled, Is.False);
-        Assert.That(testModule.Event, Is.Not.Null);
-        Assert.That(testModule.Tags, Is.Not.Null);
-        Assert.That(testModule.Tags.Get("Name"), Is.EqualTo("TestModule"));
+        Assert.AreEqual(testModule.Name, testModule.GetType().Name);
+        testModule.name = "TestModule";
+        Assert.AreEqual(testModule.Name, "TestModule");
+
+        Assert.AreEqual(testModule.Enabled, false);
+        Assert.IsNotNull(testModule.Event);
+        Assert.IsNotNull(testModule.Tags);
+        Assert.AreEqual(testModule.Tags.Get("Name"), "TestModule");
+        Assert.IsNotNull(testModule.Tags.Get("Hash"));
     }
 
     [Test]
-    public void Lifecycle()
+    public void Life()
     {
         // 验证基础生命周期方法
-        bool awakeCalled = false;
-        bool startCalled = false;
-        bool resetCalled = false;
-        bool stopCalled = false;
+        LogAssert.Expect(LogType.Log, new Regex(@"Module has been awaked\."));
+        LogAssert.Expect(LogType.Log, new Regex(@"Module has been started\."));
+        LogAssert.Expect(LogType.Log, new Regex(@"Module has been reseted\."));
+        LogAssert.Expect(LogType.Log, new Regex(@"Module has been stopped\."));
 
-        var moduleImpl = new TestModuleImpl();
-        moduleImpl.AwakeAction = () => awakeCalled = true;
-        moduleImpl.StartAction = (args) => startCalled = true;
-        moduleImpl.ResetAction = () => resetCalled = true;
-        moduleImpl.StopAction = () => stopCalled = true;
-
-        moduleImpl.Awake();
-        Assert.That(awakeCalled, Is.True);
-
-        moduleImpl.Start("test");
-        Assert.That(startCalled, Is.True);
-        Assert.That(moduleImpl.Enabled, Is.True);
-
-        moduleImpl.Reset();
-        Assert.That(resetCalled, Is.True);
-
-        moduleImpl.Stop();
-        Assert.That(stopCalled, Is.True);
-        Assert.That(moduleImpl.Enabled, Is.False);
-        Assert.That(moduleImpl.Event, Is.Not.Null);
+        testModule.Awake();
+        testModule.Start();
+        Assert.IsTrue(testModule.Enabled);
+        testModule.Reset();
+        testModule.Stop();
+        Assert.IsFalse(testModule.Enabled);
     }
 
     [Test]
     public void Event()
     {
-        // 验证事件系统
-        bool eventTriggered = false;
-        testModule.Event.Reg(1, () => eventTriggered = true);
-        testModule.Event.Notify(1);
-        Assert.That(eventTriggered, Is.True);
+        var eventTriggered = false;
+        Action callback = () => eventTriggered = true;
 
-        testModule.Stop();
+        // 验证注册事件
+        testModule.Event.Reg(1, callback);
+        testModule.Event.Notify(1);
+        Assert.IsTrue(eventTriggered);
+
+        // 验证注销事件
+        testModule.Event.Unreg(1, callback);
         eventTriggered = false;
         testModule.Event.Notify(1);
-        Assert.That(eventTriggered, Is.False);
+        Assert.IsFalse(eventTriggered);
     }
 
     [Test]
     public void Singleton()
     {
         // 验证单例模式
-        var instance1 = TestSingletonModule.Instance;
-        var instance2 = TestSingletonModule.Instance;
+        var instance1 = MySingletonModule.Instance;
+        var instance2 = MySingletonModule.Instance;
 
-        Assert.That(instance1, Is.Not.Null);
-        Assert.That(instance2, Is.Not.Null);
-        Assert.That(instance1, Is.SameAs(instance2));
+        Assert.IsNotNull(instance1);
+        Assert.IsNotNull(instance2);
+        Assert.AreSame(instance1, instance2);
     }
 
-    private class TestModuleImpl : XModule.Base
-    {
-        public Action AwakeAction { get; set; }
-        public Action<object[]> StartAction { get; set; }
-        public Action ResetAction { get; set; }
-        public Action StopAction { get; set; }
-
-        public override void Awake()
-        {
-            AwakeAction?.Invoke();
-            base.Awake();
-        }
-
-        public override void Start(params object[] args)
-        {
-            StartAction?.Invoke(args);
-            base.Start(args);
-        }
-
-        public override void Reset()
-        {
-            ResetAction?.Invoke();
-            base.Reset();
-        }
-
-        public override void Stop()
-        {
-            StopAction?.Invoke();
-            base.Stop();
-        }
-    }
-
-    private class TestModule : XModule.Base
-    {
-        public override string Name => "TestModule";
-    }
-
-    private class TestSingletonModule : XModule.Base<TestSingletonModule>
-    {
-        public override string Name => "TestSingletonModule";
-    }
+    private class MySingletonModule : XModule.Base<MySingletonModule> { }
 }
 #endif
