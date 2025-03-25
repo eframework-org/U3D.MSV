@@ -8,58 +8,14 @@ using EFramework.Utility;
 namespace EFramework.Modulize
 {
     /// <summary>
-    /// 场景系统提供了游戏场景的管理框架，支持场景的切换、生命周期管理和更新逻辑。
+    /// XScene 提供了游戏场景的逻辑管理框架，支持场景的切换、生命周期管理和更新逻辑。
     /// </summary>
     /// <remarks>
     /// <code>
-    /// 功能特性
-    /// - 场景生命周期管理（Awake、Start、Update、Reset、Stop）
-    /// - 场景切换系统
-    /// - 场景代理支持
-    /// - 单例模式支持
-    /// 
-    /// 使用手册
-    /// 1. 基础场景
-    /// 
-    /// 1.1 创建场景
-    /// 
-    ///     public class MyScene : XScene.Base
-    ///     {
-    ///         public override void Start(params object[] args)
-    ///         {
-    ///             base.Start(args);
-    ///             // 场景启动逻辑
-    ///         }
-    ///         
-    ///         public override void Update()
-    ///         {
-    ///             // 场景更新逻辑
-    ///         }
-    ///     }
-    /// 
-    /// 2. 单例场景
-    /// 
-    /// 2.1 创建单例场景
-    /// 
-    ///     public class MySingletonScene : XScene.Base<MySingletonScene>
-    ///     {
-    ///         public override void Start(params object[] args)
-    ///         {
-    ///             base.Start(args);
-    ///             // 场景启动逻辑
-    ///         }
-    ///     }
-    /// 
-    /// 2.2 使用单例场景
-    /// 
-    ///     var scene = MySingletonScene.Instance;
-    ///     scene.Start();
-    /// 
-    /// 3. 场景切换
-    /// 
-    /// 3.1 切换场景
-    /// 
-    ///     XScene.Goto(new MyScene(), "参数1", "参数2");
+    /// 功能特性:
+    /// - 场景生命周期管理（Awake初始化、Start启动、Update更新、Reset重置、Stop停止）
+    /// - 场景代理支持，可将任意对象(包括Unity场景)转换为场景接口
+    /// - 单例模式支持，简化场景访问和管理
     /// </code>
     /// 更多信息请参考模块文档。
     /// </remarks>

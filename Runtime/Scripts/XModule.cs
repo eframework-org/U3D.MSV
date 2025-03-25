@@ -7,47 +7,15 @@ using EFramework.Utility;
 namespace EFramework.Modulize
 {
     /// <summary>
-    /// 模块系统提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统。
+    /// XModule 提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统。
     /// </summary>
     /// <remarks>
     /// <code>
-    /// 功能特性
-    /// - 模块生命周期管理（Awake、Start、Reset、Stop）
-    /// - 事件系统集成
-    /// - 日志标签系统
-    /// - 单例模式支持
-    /// 
-    /// 使用手册
-    /// 1. 基础模块
-    /// 
-    /// 1.1 创建模块
-    /// 
-    ///     public class MyModule : XModule.Base
-    ///     {
-    ///         public override void Start(params object[] args)
-    ///         {
-    ///             base.Start(args);
-    ///             // 模块启动逻辑
-    ///         }
-    ///     }
-    /// 
-    /// 2. 单例模块
-    /// 
-    /// 2.1 创建单例模块
-    /// 
-    ///     public class MySingletonModule : XModule.Base<MySingletonModule>
-    ///     {
-    ///         public override void Start(params object[] args)
-    ///         {
-    ///             base.Start(args);
-    ///             // 模块启动逻辑
-    ///         }
-    ///     }
-    /// 
-    /// 2.2 使用单例模块
-    /// 
-    ///     var module = MySingletonModule.Instance;
-    ///     module.Start();
+    /// 功能特性:
+    /// - 模块生命周期管理（Awake初始化、Start启动、Reset重置、Stop停止）
+    /// - 事件系统集成，提供模块间通信能力
+    /// - 日志标签系统，自动记录模块状态变化和关键操作
+    /// - 单例模式支持，简化模块访问和管理
     /// </code>
     /// 更多信息请参考模块文档。
     /// </remarks>

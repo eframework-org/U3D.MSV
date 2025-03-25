@@ -3,15 +3,14 @@
 [![Version](https://img.shields.io/npm/v/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)
 [![Downloads](https://img.shields.io/npm/dm/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)  
 
-XModule 是模块管理基类，提供了模块的生命周期管理和事件系统集成。该模块支持模块的初始化、启动、重置和停止等操作，并提供了统一的日志和事件处理机制。
+XModule 提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统。
 
 ## 功能特性
 
-- 支持模块生命周期管理
-- 提供事件系统集成
-- 支持模块状态控制
-- 提供统一的日志标签
-- 支持单例模式实现
+- 模块生命周期管理（Awake初始化、Start启动、Reset重置、Stop停止）
+- 事件系统集成，提供模块间通信能力
+- 日志标签系统，自动记录模块状态变化和关键操作
+- 单例模式支持，简化模块访问和管理
 
 ## 使用手册
 
@@ -23,36 +22,15 @@ XModule 是模块管理基类，提供了模块的生命周期管理和事件系
 public class MyModule : XModule.Base
 {
     public override string Name => "MyModule";
-
-    public override void Awake()
-    {
-        // 模块初始化逻辑
-    }
-
-    public override void Start(params object[] args)
-    {
-        // 模块启动逻辑
-    }
-
-    public override void Reset()
-    {
-        // 模块重置逻辑
-    }
-
-    public override void Stop()
-    {
-        // 模块停止逻辑
-    }
 }
 ```
 
 #### 1.2 单例模块
 ```csharp
 // 创建单例模块类
-public class MySingletonModule : XModule.Base<MySingletonModule>
+public class MySingletonModule : XModule.Base<MySingletonModule> 
 {
-    // 使用 Instance 属性访问单例实例
-    public static MySingletonModule Instance => XModule.Base<MySingletonModule>.Instance;
+    public override string Name => "MySingletonModule";
 }
 ```
 
@@ -85,40 +63,17 @@ module.Event.Unreg(eid, callback);
 module.Event.Notify(eid, args);
 ```
 
-#### 2.3 日志标签
-```csharp
-// 设置模块日志标签
-module.Tags = XLog.GetTag()
-    .Set("CustomTag", "Value");
-
-// 使用模块日志标签记录日志
-XLog.Notice("Module message", module.Tags);
-```
-
 ## 常见问题
 
+### 模块的生命周期顺序是什么？
+模块生命周期的典型顺序是：
+1. 构造函数 - 创建模块实例
+2. Awake() - 初始化模块基础设施
+3. Start() - 启动模块功能
+4. Reset() - 重置模块状态(可选)
+5. Stop() - 停止模块并清理资源
+
 更多问题，请查阅[问题反馈](../CONTRIBUTING.md#问题反馈)。
-
-### 1. 模块初始化失败
-问题：模块的 Awake 方法没有被调用。
-解决方案：
-- 检查模块实例是否正确创建
-- 确认模块继承关系是否正确
-- 验证模块构造函数是否正常
-
-### 2. 事件系统异常
-问题：模块的事件没有被正确处理。
-解决方案：
-- 检查事件管理器是否正确初始化
-- 确认事件注册和注销时机
-- 验证事件参数是否正确传递
-
-### 3. 日志记录问题
-问题：模块的日志没有被正确记录。
-解决方案：
-- 检查日志标签是否正确设置
-- 确认日志级别是否合适
-- 验证日志系统是否正常工作
 
 ## 项目信息
 
