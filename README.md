@@ -7,9 +7,9 @@ U3D.MSV 是一个模块化开发框架，提供了标准的模块(Module)-场景
 
 ## 功能特性
 
-- [XModule](Documentation~/XModule.md) XModule 提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统。
-- [XScene](Documentation~/XScene.md) XScene 提供了游戏场景的逻辑管理框架，支持场景的切换、生命周期管理和更新逻辑。
-- [XView](Documentation~/XView.md) XView 提供了视图的加载、显示、排序和事件管理等功能。该模块支持同步和异步加载，并提供了灵活的视图缓存和事件处理机制。
+- [XModule](Documentation~/XModule.md) 提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统
+- [XScene](Documentation~/XScene.md) 提供了游戏场景的逻辑管理框架，支持场景的切换、生命周期管理和更新逻辑
+- [XView](Documentation~/XView.md) 提供了UI视图的加载、显示、排序和事件管理等功能
 
 ## 常见问题
 
