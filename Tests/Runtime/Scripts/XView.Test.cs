@@ -58,7 +58,7 @@ public class TestXView
         XView.cachedView.Add(nonCachedView);
 
         // 创建一个测试场景并卸载，触发sceneUnloaded事件
-        var scene = SceneManager.CreateScene("TestScene");
+        var scene = SceneManager.CreateScene("MSVTestScene");
         SceneManager.SetActiveScene(scene);
         yield return SceneManager.UnloadSceneAsync(scene);
 
