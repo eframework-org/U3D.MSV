@@ -10,6 +10,113 @@ using UnityEngine.SceneManagement;
 
 namespace EFramework.Modulize
 {
+    /// <summary>
+    /// XView 提供了业务开发的基础视图，通过业务处理器（Handler）的模式实现了视图的管理功能。
+    /// </summary>
+    /// <remarks>
+    /// <code>
+    /// 功能特性
+    /// - 业务处理器：通过 handler 控制视图，实现了加载、显示、排序等功能
+    /// - 多插件适配：支持 Unity UI、FairyGUI、Next Gen GUI 等 UI 插件
+    /// 
+    /// 使用手册
+    /// 1. 创建视图
+    /// 
+    /// 1.1 基础视图
+    /// 
+    ///     // 基础视图
+    ///     public class MyView : XView.Base { }
+    /// 
+    /// 1.2 视图描述
+    /// 
+    ///     // 创建描述
+    ///     var meta = new XView.Meta(
+    ///         path: "Prefabs/MyView",           // 预制体路径
+    ///         fixedRQ: 0,                       // 固定渲染顺序
+    ///         focus: XView.EventType.Dynamic,   // 焦点类型
+    ///         cache: XView.CacheType.Scene,     // 缓存类型
+    ///         multiple: false                   // 是否支持多实例
+    ///     );
+    /// 
+    /// 1.3 事件系统
+    /// 
+    ///     // 注册事件
+    ///     Event.Reg(eid, callback);
+    ///     Event.Reg&lt;T1&gt;(eid, callback);
+    ///     Event.Reg&lt;T1, T2&gt;(eid, callback);
+    ///     Event.Reg&lt;T1, T2, T3&gt;(eid, callback);
+    /// 
+    ///     // 注销事件
+    ///     Event.Unreg(eid, callback);
+    ///     Event.Unreg&lt;T1&gt;(eid, callback);
+    ///     Event.Unreg&lt;T1, T2&gt;(eid, callback);
+    ///     Event.Unreg&lt;T1, T2, T3&gt;(eid, callback);
+    /// 
+    ///     // 触发事件
+    ///     Event.Notify(eid, manager, args);
+    /// 
+    /// 2. 视图管理
+    /// 
+    /// 2.1 初始化
+    /// 
+    ///     // 创建自定义Handler
+    ///     public class MyHandler : XView.IHandler 
+    ///     {
+    ///         public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
+    ///         {
+    ///             // 实现视图加载逻辑
+    ///         }
+    /// 
+    ///         public void LoadAsync(XView.IMeta meta, Transform parent, Action&lt;XView.IBase, GameObject&gt; callback)
+    ///         {
+    ///             // 实现异步加载逻辑
+    ///         }
+    /// 
+    ///         public bool Loading(XView.IMeta meta) { 
+    ///             // 是否正在加载视图
+    ///         }
+    /// 
+    ///         public void SetOrder(XView.IBase view, int order)
+    ///         {
+    ///             // 实现视图排序逻辑
+    ///         }
+    /// 
+    ///         public void SetFocus(XView.IBase view, bool focus)
+    ///         {
+    ///             // 实现焦点设置逻辑
+    ///         }
+    ///     }
+    /// 
+    ///     // 初始化视图系统
+    ///     var handler = new MyHandler();
+    ///     XView.Initialize(handler);
+    /// 
+    /// 2.2 打开视图
+    /// 
+    ///     // 同步打开视图
+    ///     var view = XView.Open(meta, args);
+    /// 
+    ///     // 异步打开视图
+    ///     XView.OpenAsync(meta, callback, args);
+    /// 
+    /// 2.3 关闭视图
+    /// 
+    ///     // 关闭指定视图
+    ///     XView.Close(meta, resume);
+    /// 
+    ///     // 关闭所有视图
+    ///     XView.CloseAll(exclude);
+    /// 
+    /// 2.4 视图排序
+    /// 
+    ///     // 设置视图顺序
+    ///     XView.Sort(view, below, above);
+    /// 
+    ///     // 恢复默认顺序
+    ///     XView.Resume();
+    /// </code>
+    /// 更多信息请参考视图文档。
+    /// </remarks>
     #region 基础视图
     public partial class XView
     {
@@ -751,9 +858,6 @@ namespace EFramework.Modulize
     #endregion
 
     #region 视图管理
-    /// <summary>
-    /// 视图管理类，提供视图的加载、显示、隐藏和焦点管理功能。
-    /// </summary>
     public partial class XView
     {
         /// <summary>

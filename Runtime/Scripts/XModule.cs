@@ -6,6 +6,63 @@ using EFramework.Utility;
 
 namespace EFramework.Modulize
 {
+    /// <summary>
+    /// XModule 提供了业务开发的基础模块，支持模块的生命周期管理和事件系统集成。
+    /// </summary>
+    /// <remarks>
+    /// <code>
+    /// 功能特性
+    /// - 生命周期管理：提供了 Awake、Start、Reset、Stop 状态控制
+    /// - 事件系统集成：通过事件系统对模块内（间）的业务进行解耦合
+    /// 
+    /// 使用手册
+    /// 1. 创建模块
+    /// 
+    /// 1.1 基础模块
+    /// 
+    ///     // 基础模块
+    ///     public class MyModule : XModule.Base
+    ///     {
+    ///         public override string Name =&gt; "MyModule";
+    ///     }
+    /// 
+    /// 1.2 单例模块
+    /// 
+    ///     // 单例模块
+    ///     public class MySingletonModule : XModule.Base&lt;MySingletonModule&gt; 
+    ///     {
+    ///         public override string Name =&gt; "MySingletonModule";
+    ///     }
+    /// 
+    /// 2. 模块管理
+    /// 
+    /// 2.1 模块状态
+    /// 
+    ///     // 获取模块名称
+    ///     var moduleName = module.Name;
+    /// 
+    ///     // 控制模块启用状态
+    ///     module.Enabled = true;
+    /// 
+    ///     // 获取模块日志标签
+    ///     var tags = module.Tags;
+    /// 
+    /// 2.2 事件系统
+    /// 
+    ///     // 获取模块事件管理器
+    ///     var eventManager = module.Event;
+    /// 
+    ///     // 注册事件
+    ///     module.Event.Reg(eid, callback);
+    /// 
+    ///     // 注销事件
+    ///     module.Event.Unreg(eid, callback);
+    /// 
+    ///     // 触发事件
+    ///     module.Event.Notify(eid, args);
+    /// </code>
+    /// 更多信息请参考模块文档。
+    /// </remarks>
     public class XModule
     {
         /// <summary>

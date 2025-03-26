@@ -42,7 +42,7 @@ public class TestXModule
     }
 
     [Test]
-    public void Life()
+    public void Lifecycle()
     {
         // 验证基础生命周期方法
         LogAssert.Expect(LogType.Log, new Regex(@"Module has been awaked\."));

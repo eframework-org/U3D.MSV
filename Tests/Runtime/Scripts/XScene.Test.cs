@@ -24,7 +24,7 @@ public class TestXScene
     }
 
     [UnityTest]
-    public IEnumerator Manager()
+    public IEnumerator Manage()
     {
         var onSwapCalled = false;
         XScene.OnSwap += () => onSwapCalled = true;

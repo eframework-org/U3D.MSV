@@ -56,7 +56,42 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
 
 ### 2. 视图管理
 
-1. 打开视图
+1. 初始化
+    ```csharp
+    // 创建自定义Handler
+    public class MyHandler : XView.IHandler 
+    {
+        public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
+        {
+            // 实现视图加载逻辑
+        }
+
+        public void LoadAsync(XView.IMeta meta, Transform parent, Action<XView.IBase, GameObject> callback)
+        {
+            // 实现异步加载逻辑
+        }
+
+        public bool Loading(XView.IMeta meta) { 
+            // 是否正在加载视图
+        }
+
+        public void SetOrder(XView.IBase view, int order)
+        {
+            // 实现视图排序逻辑
+        }
+
+        public void SetFocus(XView.IBase view, bool focus)
+        {
+            // 实现焦点设置逻辑
+        }
+    }
+
+    // 初始化视图系统
+    var handler = new MyHandler();
+    XView.Initialize(handler);
+    ```
+
+2. 打开视图
     ```csharp
     // 同步打开视图
     var view = XView.Open(meta, args);
@@ -65,7 +100,7 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
     XView.OpenAsync(meta, callback, args);
     ```
 
-2. 关闭视图
+3. 关闭视图
     ```csharp
     // 关闭指定视图
     XView.Close(meta, resume);
@@ -74,7 +109,7 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
     XView.CloseAll(exclude);
     ```
 
-3. 视图排序
+4. 视图排序
     ```csharp
     // 设置视图顺序
     XView.Sort(view, below, above);

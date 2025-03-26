@@ -7,6 +7,64 @@ using EFramework.Utility;
 
 namespace EFramework.Modulize
 {
+    /// <summary>
+    /// XScene 是一个基于模块框架设计的场景状态机，支持业务场景的切换及其生命周期管理。
+    /// </summary>
+    /// <remarks>
+    /// <code>
+    /// 功能特性
+    /// - 业务场景切换：通过状态机模式实现业务场景的切换功能
+    /// - 生命周期管理：提供了Start、Update、Stop等状态控制
+    /// 
+    /// 使用手册
+    /// 1. 创建场景
+    /// 
+    /// 1.1 基础场景
+    /// 
+    ///     // 基础场景
+    ///     public class MyScene : XScene.Base
+    ///     {
+    ///         public override string Name =&gt; "MyScene";
+    ///     }
+    /// 
+    /// 1.2 单例场景
+    /// 
+    ///     // 单例场景
+    ///     public class MySingletonScene : XScene.Base&lt;MySingletonScene&gt;
+    ///     {
+    ///         public override string Name =&gt; "MySingletonScene";
+    ///     }
+    /// 
+    /// 2. 场景管理
+    /// 
+    /// 2.1 场景切换
+    /// 
+    ///     // 获取代理实例
+    ///     XScene.OnProxy = proxy =&gt; new MyScene(proxy);
+    /// 
+    ///     // 切换业务场景
+    ///     XScene.Goto(scene, args);
+    /// 
+    /// 2.2 场景状态
+    /// 
+    ///     // 获取当前场景
+    ///     var currentScene = XScene.Current;
+    /// 
+    ///     // 获取上一个场景
+    ///     var lastScene = XScene.Last;
+    /// 
+    ///     // 获取下一个场景
+    ///     var nextScene = XScene.Next;
+    /// 
+    /// 2.3 场景事件
+    /// 
+    ///     // 注册场景切换事件
+    ///     XScene.OnSwap += () =&gt; {
+    ///         // 场景切换完成后的处理逻辑
+    ///     };
+    /// </code>
+    /// 更多信息请参考场景文档。
+    /// </remarks>
     #region 基础场景
     public partial class XScene
     {

@@ -15,6 +15,122 @@ using UnityEngine.SceneManagement;
 
 public class TestXView
 {
+    #region 视图测试准备
+    private class MyHandler : XView.IHandler
+    {
+        public XView.IBase lastFocusedView;
+        public List<XView.IBase> viewOrder = new List<XView.IBase>();
+        public XView.IBase lastSetOrderView;
+        public int lastSetOrderValue;
+
+        public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
+        {
+            panel = new GameObject(meta.Path);
+            if (parent != null)
+                panel.transform.SetParent(parent, false);
+
+            var myView = panel.AddComponent<MyView>();
+            myView.Meta = meta;
+            myView.Panel = panel;
+            view = myView;
+
+            viewOrder.Add(view);
+        }
+
+        public void LoadAsync(XView.IMeta meta, Transform parent, Action<XView.IBase, GameObject> callback)
+        {
+            var panel = new GameObject(meta.Path);
+            if (parent != null)
+                panel.transform.SetParent(parent, false);
+
+            var mockView = panel.AddComponent<MyView>();
+            mockView.Meta = meta;
+            mockView.Panel = panel;
+
+            viewOrder.Add(mockView);
+            callback?.Invoke(mockView, panel);
+        }
+
+        public bool Loading(XView.IMeta meta) { return false; }
+
+        public void SetOrder(XView.IBase view, int order)
+        {
+            if (!viewOrder.Contains(view)) viewOrder.Add(view);
+
+            // 记录最后一次设置的顺序
+            lastSetOrderView = view;
+            lastSetOrderValue = order;
+        }
+
+        public void SetFocus(XView.IBase view, bool focus)
+        {
+            if (focus) lastFocusedView = view;
+        }
+    }
+
+    private class MyView : XView.Base
+    {
+        public Action OnOpenCallback;
+        public Action OnFocusCallback;
+        public Action OnBlurCallback;
+        public Action OnCloseCallback;
+
+        public override void OnOpen(params object[] args)
+        {
+            base.OnOpen(args);
+            OnOpenCallback?.Invoke();
+        }
+
+        public override void OnFocus()
+        {
+            base.OnFocus();
+            OnFocusCallback?.Invoke();
+        }
+
+        public override void OnBlur()
+        {
+            base.OnBlur();
+            OnBlurCallback?.Invoke();
+        }
+
+        public override void OnClose(Action done)
+        {
+            OnCloseCallback?.Invoke();
+            done?.Invoke();
+            base.OnClose(done);
+        }
+    }
+
+    private class MyEventView1 : XView.Base
+    {
+        public Action Callback = null;
+    }
+
+    private class MyEventView2 : XView.Base
+    {
+        public Action Callback = null;
+        private MyEventView1 view1;
+        public MyEventView1 View1
+        {
+            get
+            {
+                return view1;
+            }
+            set
+            {
+                view1 = value;
+                view1.Event.Reg(TestEvent.Test2, Callback);
+            }
+        }
+    }
+
+    private enum TestEvent
+    {
+        Test1,
+        Test2,
+        Test3,
+    }
+
     private XView.Meta testMeta;
     private GameObject testPanel;
     private MyHandler myHandler;
@@ -29,100 +145,14 @@ public class TestXView
     }
 
     [TearDown]
-    public void Teardown()
+    public void Reset()
     {
         if (testPanel != null) GameObject.Destroy(testPanel);
         XView.CloseAll();
     }
+    #endregion
 
-    [UnityTest]
-    public IEnumerator Initialize()
-    {
-        // 创建三种不同缓存类型的视图
-        var sceneCachedMeta = new XView.Meta("SceneCachedView", 0, XView.EventType.Dynamic, XView.CacheType.Scene);
-        var sharedCachedMeta = new XView.Meta("SharedCachedView", 0, XView.EventType.Dynamic, XView.CacheType.Shared);
-        var nonCachedMeta = new XView.Meta("NonCachedView", 0, XView.EventType.Dynamic, XView.CacheType.None);
-
-        // 创建视图并添加到缓存列表
-        var sceneCachedView = XView.Open(sceneCachedMeta);
-        var sharedCachedView = XView.Open(sharedCachedMeta);
-        var nonCachedView = XView.Open(nonCachedMeta);
-
-        // 确保视图的GameObject存在
-        Assert.IsNotNull(sceneCachedView.Panel, "SceneCached视图的GameObject应当存在");
-        Assert.IsNotNull(sharedCachedView.Panel, "SharedCached视图的GameObject应当存在");
-        Assert.IsNotNull(nonCachedView.Panel, "NonCached视图的GameObject应当存在");
-        // 添加到缓存视图列表
-        XView.cachedView.Add(sceneCachedView);
-        XView.cachedView.Add(sharedCachedView);
-        XView.cachedView.Add(nonCachedView);
-
-        // 创建一个测试场景并卸载，触发sceneUnloaded事件
-        var scene = SceneManager.CreateScene("MSVTestScene");
-        SceneManager.SetActiveScene(scene);
-        yield return SceneManager.UnloadSceneAsync(scene);
-
-        // 验证Scene类型的缓存视图被移除，而Shared类型的视图保留
-        Assert.AreEqual(2, XView.cachedView.Count, "缓存视图数量应当为2");
-        Assert.IsFalse(XView.cachedView.Contains(sceneCachedView), "SceneCached视图应当被移除");
-        Assert.IsTrue(XView.cachedView.Contains(sharedCachedView), "SharedCached视图应当保留");
-        Assert.IsTrue(XView.cachedView.Contains(nonCachedView), "NonCached视图只在关闭时销毁");
-        Assert.IsTrue(sceneCachedView.Panel == null && !sceneCachedView.Panel, "SceneCached视图的GameObject应当被销毁");
-        Assert.IsTrue(sharedCachedView.Panel != null && sharedCachedView.Panel, "SharedCached视图的GameObject应当仍然存在");
-        Assert.IsTrue(nonCachedView.Panel != null && nonCachedView.Panel, "NonCached视图只在关闭时销毁");
-    }
-
-    [Test]
-    public void OpenAndClose()
-    {
-        // 测试不同缓存类型
-        var meta1 = new XView.Meta("View1", 0, XView.EventType.Dynamic, XView.CacheType.None);
-        var meta2 = new XView.Meta("View2", 0, XView.EventType.Dynamic, XView.CacheType.Scene);
-        var meta3 = new XView.Meta("View3", 0, XView.EventType.Dynamic, XView.CacheType.Shared);
-
-        // 测试Open方法
-        var view1 = XView.Open(meta1);
-        var view2 = XView.Open(meta2);
-        var view3 = XView.Open(meta3);
-        Assert.IsNotNull(view1, "视图1应当成功创建且不为空");
-        Assert.IsNotNull(view2, "视图2应当成功创建且不为空");
-        Assert.IsNotNull(view3, "视图3应当成功创建且不为空");
-        Assert.IsTrue(view1.Panel.activeSelf, "视图1的面板应当处于激活状态");
-        Assert.IsTrue(view2.Panel.activeSelf, "视图2的面板应当处于激活状态");
-        Assert.IsTrue(view3.Panel.activeSelf, "视图3的面板应当处于激活状态");
-
-        // 测试Close方法
-        XView.Close(view1);
-        XView.Close(view2);
-        XView.Close(view3);
-        Assert.IsTrue(view1.Panel == null, "CacheType.None类型的视图关闭后Panel应当被销毁");
-        Assert.IsFalse(view2.Panel.activeSelf, "CacheType.Scene类型的视图关闭后Panel应当设为非活动状态");
-        Assert.IsFalse(view3.Panel.activeSelf, "CacheType.Shared类型的视图关闭后Panel应当设为非活动状态");
-    }
-
-    [Test]
-    public void CloseAll()
-    {
-        // 测试CloseAll方法
-        var meta1 = new XView.Meta("View1");
-        var meta2 = new XView.Meta("View2");
-        var meta3 = new XView.Meta("View3");
-
-        var view1 = XView.Open(meta1);
-        var view2 = XView.Open(meta2);
-        var view3 = XView.Open(meta3);
-
-        Assert.IsNotNull(view1);
-        Assert.IsNotNull(view2);
-        Assert.IsNotNull(view3);
-
-        XView.CloseAll(meta1); // 关闭除meta1外的所有界面
-
-        Assert.IsTrue(view1.Panel.activeSelf, "排除的视图1应当保持激活状态");
-        Assert.IsFalse(view2.Panel.activeSelf, "视图2应当被关闭且处于非激活状态");
-        Assert.IsFalse(view3.Panel.activeSelf, "视图3应当被关闭且处于非激活状态");
-    }
-
+    #region 基础视图测试
     [Test]
     public void Meta()
     {
@@ -136,7 +166,7 @@ public class TestXView
     }
 
     [Test]
-    public void EventTest()
+    public void Event()
     {
         var obj1 = new GameObject("EventTestView1");
         var obj2 = new GameObject("EventTestView2");
@@ -220,6 +250,80 @@ public class TestXView
     }
 
     [Test]
+    public void Base()
+    {
+        // 测试Base类的基本方法
+        var obj = new GameObject();
+        var myView = obj.AddComponent<MyView>();
+        myView.Meta = testMeta;
+        myView.Panel = obj;
+
+        Assert.IsNotNull(myView.Event, "视图的Event属性不应为空");
+        Assert.IsNotNull(myView.Tags, "视图的Tags属性不应为空");
+
+        // 测试生命周期方法
+        var openCalled = false;
+        var focusCalled = false;
+        var blurCalled = false;
+        var closeCalled = false;
+        myView.OnOpenCallback = () => openCalled = true;
+        myView.OnFocusCallback = () => focusCalled = true;
+        myView.OnBlurCallback = () => blurCalled = true;
+        myView.OnCloseCallback = () => closeCalled = true;
+
+        myView.OnOpen();
+        Assert.IsTrue(openCalled, "OnOpen方法应当调用OnOpenCallback");
+        myView.OnFocus();
+        Assert.IsTrue(focusCalled, "OnFocus方法应当调用OnFocusCallback");
+        myView.OnBlur();
+        Assert.IsTrue(blurCalled, "OnBlur方法应当调用OnBlurCallback");
+
+        var closeDoneCalled = false;
+        myView.OnClose(() => closeDoneCalled = true);
+        Assert.IsTrue(closeCalled, "OnClose方法应当调用OnCloseCallback");
+        Assert.IsTrue(closeDoneCalled, "OnClose方法应当执行传入的done回调");
+    }
+    #endregion
+
+    #region 视图管理测试
+    [UnityTest]
+    public IEnumerator Init()
+    {
+        // 创建三种不同缓存类型的视图
+        var sceneCachedMeta = new XView.Meta("SceneCachedView", 0, XView.EventType.Dynamic, XView.CacheType.Scene);
+        var sharedCachedMeta = new XView.Meta("SharedCachedView", 0, XView.EventType.Dynamic, XView.CacheType.Shared);
+        var nonCachedMeta = new XView.Meta("NonCachedView", 0, XView.EventType.Dynamic, XView.CacheType.None);
+
+        // 创建视图并添加到缓存列表
+        var sceneCachedView = XView.Open(sceneCachedMeta);
+        var sharedCachedView = XView.Open(sharedCachedMeta);
+        var nonCachedView = XView.Open(nonCachedMeta);
+
+        // 确保视图的GameObject存在
+        Assert.IsNotNull(sceneCachedView.Panel, "SceneCached视图的GameObject应当存在");
+        Assert.IsNotNull(sharedCachedView.Panel, "SharedCached视图的GameObject应当存在");
+        Assert.IsNotNull(nonCachedView.Panel, "NonCached视图的GameObject应当存在");
+        // 添加到缓存视图列表
+        XView.cachedView.Add(sceneCachedView);
+        XView.cachedView.Add(sharedCachedView);
+        XView.cachedView.Add(nonCachedView);
+
+        // 创建一个测试场景并卸载，触发sceneUnloaded事件
+        var scene = SceneManager.CreateScene("MSVTestScene");
+        SceneManager.SetActiveScene(scene);
+        yield return SceneManager.UnloadSceneAsync(scene);
+
+        // 验证Scene类型的缓存视图被移除，而Shared类型的视图保留
+        Assert.AreEqual(2, XView.cachedView.Count, "缓存视图数量应当为2");
+        Assert.IsFalse(XView.cachedView.Contains(sceneCachedView), "SceneCached视图应当被移除");
+        Assert.IsTrue(XView.cachedView.Contains(sharedCachedView), "SharedCached视图应当保留");
+        Assert.IsTrue(XView.cachedView.Contains(nonCachedView), "NonCached视图只在关闭时销毁");
+        Assert.IsTrue(sceneCachedView.Panel == null && !sceneCachedView.Panel, "SceneCached视图的GameObject应当被销毁");
+        Assert.IsTrue(sharedCachedView.Panel != null && sharedCachedView.Panel, "SharedCached视图的GameObject应当仍然存在");
+        Assert.IsTrue(nonCachedView.Panel != null && nonCachedView.Panel, "NonCached视图只在关闭时销毁");
+    }
+
+    [Test]
     public void Load()
     {
         var parentTransform = new GameObject("Parent").transform;
@@ -274,22 +378,68 @@ public class TestXView
         if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
     }
 
-    [Test]
-    public void Find()
+    [UnityTest]
+    public IEnumerator Open()
     {
-        var parentTransform = new GameObject("Parent").transform;
-        // 通过Load加载，不会自动加入openedView列表
-        XView.Load(testMeta, parentTransform, false);
-        var foundView = XView.Find(testMeta);
-        Assert.IsNull(foundView);
+        // 测试不同缓存类型
+        var meta1 = new XView.Meta("View1", 0, XView.EventType.Dynamic, XView.CacheType.None);
+        var meta2 = new XView.Meta("View2", 0, XView.EventType.Dynamic, XView.CacheType.Scene);
+        var meta3 = new XView.Meta("View3", 0, XView.EventType.Dynamic, XView.CacheType.Shared);
 
-        // 通过Open加载，会自动加入openedView列表
-        var openedView = XView.Open(testMeta);
-        foundView = XView.Find(testMeta);
-        Assert.IsNotNull(foundView);
-        Assert.AreSame(openedView, foundView);
+        // 测试Open方法
+        var view1 = XView.Open(meta1);
+        var view2 = XView.Open(meta2);
+        var view3 = XView.Open(meta3);
+        Assert.IsNotNull(view1, "视图1应当成功创建且不为空");
+        Assert.IsNotNull(view2, "视图2应当成功创建且不为空");
+        Assert.IsNotNull(view3, "视图3应当成功创建且不为空");
+        Assert.IsTrue(view1.Panel.activeSelf, "视图1的面板应当处于激活状态");
+        Assert.IsTrue(view2.Panel.activeSelf, "视图2的面板应当处于激活状态");
+        Assert.IsTrue(view3.Panel.activeSelf, "视图3的面板应当处于激活状态");
 
-        if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
+        // 测试Close方法
+        XView.Close(view1);
+        XView.Close(view2);
+        XView.Close(view3);
+        Assert.IsTrue(view1.Panel == null, "CacheType.None类型的视图关闭后Panel应当被销毁");
+        Assert.IsFalse(view2.Panel.activeSelf, "CacheType.Scene类型的视图关闭后Panel应当设为非活动状态");
+        Assert.IsFalse(view3.Panel.activeSelf, "CacheType.Shared类型的视图关闭后Panel应当设为非活动状态");
+
+        // 测试异步操作
+        var asyncMeta = new XView.Meta("AsyncView");
+        var callbackCalled = false;
+
+        yield return XView.OpenAsync(asyncMeta, (view) =>
+        {
+            callbackCalled = true;
+            Assert.IsNotNull(view, "异步加载的视图不应为空");
+            Assert.AreEqual(asyncMeta.Path, view.Meta.Path, "异步加载的视图Meta路径应当与传入的Meta一致");
+        });
+
+        Assert.IsTrue(callbackCalled, "异步加载完成后应当调用回调函数");
+    }
+
+    [Test]
+    public void Close()
+    {
+        // 测试CloseAll方法
+        var meta1 = new XView.Meta("View1");
+        var meta2 = new XView.Meta("View2");
+        var meta3 = new XView.Meta("View3");
+
+        var view1 = XView.Open(meta1);
+        var view2 = XView.Open(meta2);
+        var view3 = XView.Open(meta3);
+
+        Assert.IsNotNull(view1);
+        Assert.IsNotNull(view2);
+        Assert.IsNotNull(view3);
+
+        XView.CloseAll(meta1); // 关闭除meta1外的所有界面
+
+        Assert.IsTrue(view1.Panel.activeSelf, "排除的视图1应当保持激活状态");
+        Assert.IsFalse(view2.Panel.activeSelf, "视图2应当被关闭且处于非激活状态");
+        Assert.IsFalse(view3.Panel.activeSelf, "视图3应当被关闭且处于非激活状态");
     }
 
     [Test]
@@ -394,173 +544,23 @@ public class TestXView
         Assert.AreSame(view, myHandler.lastFocusedView, "Focus方法应当正确设置视图的焦点状态");
     }
 
-    [UnityTest]
-    public IEnumerator AsyncOperations()
-    {
-        // 测试异步操作
-        var asyncMeta = new XView.Meta("AsyncView");
-        var callbackCalled = false;
-
-        yield return XView.OpenAsync(asyncMeta, (view) =>
-        {
-            callbackCalled = true;
-            Assert.IsNotNull(view, "异步加载的视图不应为空");
-            Assert.AreEqual(asyncMeta.Path, view.Meta.Path, "异步加载的视图Meta路径应当与传入的Meta一致");
-        });
-
-        Assert.IsTrue(callbackCalled, "异步加载完成后应当调用回调函数");
-    }
-
     [Test]
-    public void BaseMethods()
+    public void Find()
     {
-        // 测试Base类的基本方法
-        var obj = new GameObject();
-        var myView = obj.AddComponent<MyView>();
-        myView.Meta = testMeta;
-        myView.Panel = obj;
+        var parentTransform = new GameObject("Parent").transform;
+        // 通过Load加载，不会自动加入openedView列表
+        XView.Load(testMeta, parentTransform, false);
+        var foundView = XView.Find(testMeta);
+        Assert.IsNull(foundView);
 
-        Assert.IsNotNull(myView.Event, "视图的Event属性不应为空");
-        Assert.IsNotNull(myView.Tags, "视图的Tags属性不应为空");
+        // 通过Open加载，会自动加入openedView列表
+        var openedView = XView.Open(testMeta);
+        foundView = XView.Find(testMeta);
+        Assert.IsNotNull(foundView);
+        Assert.AreSame(openedView, foundView);
 
-        // 测试生命周期方法
-        var openCalled = false;
-        var focusCalled = false;
-        var blurCalled = false;
-        var closeCalled = false;
-        myView.OnOpenCallback = () => openCalled = true;
-        myView.OnFocusCallback = () => focusCalled = true;
-        myView.OnBlurCallback = () => blurCalled = true;
-        myView.OnCloseCallback = () => closeCalled = true;
-
-        myView.OnOpen();
-        Assert.IsTrue(openCalled, "OnOpen方法应当调用OnOpenCallback");
-        myView.OnFocus();
-        Assert.IsTrue(focusCalled, "OnFocus方法应当调用OnFocusCallback");
-        myView.OnBlur();
-        Assert.IsTrue(blurCalled, "OnBlur方法应当调用OnBlurCallback");
-
-        var closeDoneCalled = false;
-        myView.OnClose(() => closeDoneCalled = true);
-        Assert.IsTrue(closeCalled, "OnClose方法应当调用OnCloseCallback");
-        Assert.IsTrue(closeDoneCalled, "OnClose方法应当执行传入的done回调");
+        if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
     }
-
-    private class MyHandler : XView.IHandler
-    {
-        public XView.IBase lastFocusedView;
-        public List<XView.IBase> viewOrder = new List<XView.IBase>();
-        public XView.IBase lastSetOrderView;
-        public int lastSetOrderValue;
-
-        public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
-        {
-            panel = new GameObject(meta.Path);
-            if (parent != null)
-                panel.transform.SetParent(parent, false);
-
-            var myView = panel.AddComponent<MyView>();
-            myView.Meta = meta;
-            myView.Panel = panel;
-            view = myView;
-
-            viewOrder.Add(view);
-        }
-
-        public void LoadAsync(XView.IMeta meta, Transform parent, Action<XView.IBase, GameObject> callback)
-        {
-            var panel = new GameObject(meta.Path);
-            if (parent != null)
-                panel.transform.SetParent(parent, false);
-
-            var mockView = panel.AddComponent<MyView>();
-            mockView.Meta = meta;
-            mockView.Panel = panel;
-
-            viewOrder.Add(mockView);
-            callback?.Invoke(mockView, panel);
-        }
-
-        public bool Loading(XView.IMeta meta)
-        {
-            return false;
-        }
-
-        public void SetOrder(XView.IBase view, int order)
-        {
-            if (!viewOrder.Contains(view)) viewOrder.Add(view);
-
-            // 记录最后一次设置的顺序
-            lastSetOrderView = view;
-            lastSetOrderValue = order;
-        }
-
-        public void SetFocus(XView.IBase view, bool focus)
-        {
-            if (focus) lastFocusedView = view;
-        }
-    }
-
-    private class MyView : XView.Base
-    {
-        public Action OnOpenCallback;
-        public Action OnFocusCallback;
-        public Action OnBlurCallback;
-        public Action OnCloseCallback;
-
-        public override void OnOpen(params object[] args)
-        {
-            base.OnOpen(args);
-            OnOpenCallback?.Invoke();
-        }
-
-        public override void OnFocus()
-        {
-            base.OnFocus();
-            OnFocusCallback?.Invoke();
-        }
-
-        public override void OnBlur()
-        {
-            base.OnBlur();
-            OnBlurCallback?.Invoke();
-        }
-
-        public override void OnClose(Action done)
-        {
-            OnCloseCallback?.Invoke();
-            done?.Invoke();
-            base.OnClose(done);
-        }
-    }
-
-    private class MyEventView1 : XView.Base
-    {
-        public Action Callback = null;
-    }
-
-    private class MyEventView2 : XView.Base
-    {
-        public Action Callback = null;
-        private MyEventView1 view1;
-        public MyEventView1 View1
-        {
-            get
-            {
-                return view1;
-            }
-            set
-            {
-                view1 = value;
-                view1.Event.Reg(TestEvent.Test2, Callback);
-            }
-        }
-    }
-    enum TestEvent
-    {
-        Test1,
-        Test2,
-        Test3,
-    }
+    #endregion
 }
 #endif
