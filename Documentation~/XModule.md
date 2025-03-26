@@ -3,20 +3,20 @@
 [![Version](https://img.shields.io/npm/v/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)
 [![Downloads](https://img.shields.io/npm/dm/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)  
 
-XModule 提供了游戏模块的基础框架，支持模块的生命周期管理和事件系统。
+XModule 提供了业务开发的基础模块，支持模块的生命周期管理和事件系统集成。
 
 ## 功能特性
 
-- 模块生命周期管理（Awake初始化、Start启动、Reset重置、Stop停止）
-- 事件系统集成，提供模块间通信能力
+- 生命周期管理：提供了Awake、Start、Reset、Stop状态控制
+- 事件系统集成：通过事件系统对模块内（间）的业务进行解耦合
 
 ## 使用手册
 
-### 1. 基础模块
+### 1. 创建模块
 
-1. 创建模块
+1. 基础模块
     ```csharp
-    // 创建基础模块类
+    // 基础模块
     public class MyModule : XModule.Base
     {
         public override string Name => "MyModule";
@@ -25,7 +25,7 @@ XModule 提供了游戏模块的基础框架，支持模块的生命周期管理
 
 2. 单例模块
     ```csharp
-    // 创建单例模块类
+    // 单例模块
     public class MySingletonModule : XModule.Base<MySingletonModule> 
     {
         public override string Name => "MySingletonModule";
@@ -62,14 +62,6 @@ XModule 提供了游戏模块的基础框架，支持模块的生命周期管理
     ```
 
 ## 常见问题
-
-### 1. 模块的生命周期顺序是什么？
-模块生命周期的典型顺序是：
-1. 构造函数 - 创建模块实例
-2. Awake() - 初始化模块基础设施
-3. Start() - 启动模块功能
-4. Reset() - 重置模块状态(可选)
-5. Stop() - 停止模块并清理资源
 
 更多问题，请查阅[问题反馈](../CONTRIBUTING.md#问题反馈)。
 

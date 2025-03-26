@@ -10,127 +10,32 @@ using UnityEngine.SceneManagement;
 
 namespace EFramework.Modulize
 {
-    /// <summary>
-    /// XView 提供了UI视图的加载、显示、排序和事件管理等功能。
-    /// </summary>
-    /// <remarks>
-    /// <code>
-    /// 功能特性
-    /// - 视图生命周期管理：控制视图的加载、显示、隐藏和销毁等生命周期
-    /// - 焦点管理系统：支持动态、静态和静默三种事件类型，灵活控制界面焦点变化
-    /// - 缓存机制：支持场景级、共享级和无缓存三种缓存策略，优化资源使用
-    /// - 渲染排序：自动管理视图的渲染顺序，支持固定渲染顺序和动态排序
-    /// 
-    /// 使用手册
-    /// 1. 基础视图
-    /// 
-    ///     1. 创建视图
-    /// 
-    ///         // 创建基础视图类
-    ///         public class MyView : XView.Base { }
-    /// 
-    ///     2. 视图元数据
-    /// 
-    ///         // 创建视图元数据
-    ///         var meta = new XView.Meta(
-    ///             path: "Prefabs/MyView",           // 视图预制体路径
-    ///             fixedRQ: 0,                       // 固定渲染顺序
-    ///             focus: XView.EventType.Dynamic,   // 焦点类型
-    ///             cache: XView.CacheType.Scene,     // 缓存类型
-    ///             multiple: false                   // 是否支持多实例
-    ///         );
-    /// 
-    /// 2. 视图管理
-    /// 
-    ///     1. 打开视图
-    /// 
-    ///         // 同步打开视图
-    ///         var view = XView.Open(meta, args);
-    /// 
-    ///         // 异步打开视图
-    ///         XView.OpenAsync(meta, callback, args);
-    /// 
-    ///     2. 关闭视图
-    /// 
-    ///         // 关闭指定视图
-    ///         XView.Close(meta, resume);
-    /// 
-    ///         // 关闭所有视图
-    ///         XView.CloseAll(exclude);
-    /// 
-    ///     3. 视图排序
-    /// 
-    ///         // 设置视图顺序
-    ///         XView.Sort(view, below, above);
-    /// 
-    ///         // 恢复默认顺序
-    ///         XView.Resume();
-    /// 
-    /// 3. 事件系统
-    /// 
-    ///     1. 注册事件
-    /// 
-    ///         // 注册事件回调
-    ///         Event.Reg(eid, callback);
-    ///         Event.Reg<T1>(eid, callback);
-    ///         Event.Reg<T1, T2>(eid, callback);
-    ///         Event.Reg<T1, T2, T3>(eid, callback);
-    /// 
-    ///     2. 注销事件
-    /// 
-    ///         // 注销事件回调
-    ///         Event.Unreg(eid, callback);
-    ///         Event.Unreg<T1>(eid, callback);
-    ///         Event.Unreg<T1, T2>(eid, callback);
-    ///         Event.Unreg<T1, T2, T3>(eid, callback);
-    /// 
-    ///     3. 触发事件
-    /// 
-    ///         // 触发事件
-    ///         Event.Notify(eid, manager, args);
-    /// 
-    /// 常见问题
-    /// 1. 视图的EventType（焦点类型）有什么区别？
-    /// 
-    ///     XView支持三种焦点类型：
-    ///     - Dynamic（动态）：当新视图打开时，之前的视图会自动失去焦点。适合需要独占用户输入的视图，如对话框。
-    ///     - Static（静态）：打开新视图不会影响此视图的焦点状态。适合需要保持交互的持久性视图，如操作面板。
-    ///     - Silent（静默）：视图不参与焦点系统。适合纯显示性质的视图，如提示信息或背景元素。
-    /// 
-    /// 2. 如何选择合适的视图缓存类型？
-    /// 
-    ///     根据视图的使用特性选择缓存类型：
-    ///     - Scene（场景级）：视图实例在场景切换时销毁。适合与当前场景关联的UI。
-    ///     - Shared（共享级）：视图实例在应用程序生命周期内保持。适合全局共享的UI，如主菜单。
-    ///     - None（无缓存）：视图在关闭时立即销毁。适合临时性强、内存占用大的UI。
-    /// </code>
-    /// 更多信息请参考模块文档。
-    /// </remarks>
+    #region 基础视图
     public partial class XView
     {
         /// <summary>
-        /// 定义了界面的事件类型。
+        /// 定义了视图的事件类型。
         /// </summary>
         public enum EventType
         {
             /// <summary>
-            /// 动态事件，会触发界面的焦点变化。
+            /// 动态事件，会触发视图的焦点变化。
             /// </summary>
             Dynamic,
 
             /// <summary>
-            /// 静态事件，不会触发界面的焦点变化。
+            /// 静态事件，不会触发视图的焦点变化。
             /// </summary>
             Static,
 
             /// <summary>
-            /// 静默事件，不会触发界面的焦点变化和事件通知。
+            /// 静默事件，不会触发视图的焦点变化和事件通知。
             /// </summary>
             Slience,
         }
 
         /// <summary>
-        /// 定义了界面的缓存类型。
+        /// 定义了视图的缓存类型。
         /// </summary>
         public enum CacheType
         {
@@ -151,27 +56,27 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 定义了界面的元数据接口，包含界面的基本配置信息。
+        /// 定义了视图的描述接口，包含视图的基本配置信息。
         /// </summary>
         public interface IMeta
         {
             /// <summary>
-            /// 获取界面的预制体路径。
+            /// 获取视图的预制体路径。
             /// </summary>
             string Path { get; }
 
             /// <summary>
-            /// 获取界面的固定渲染顺序。
+            /// 获取视图的固定渲染顺序。
             /// </summary>
             int FixedRQ { get; }
 
             /// <summary>
-            /// 获取界面的事件类型。
+            /// 获取视图的事件类型。
             /// </summary>
             EventType Focus { get; }
 
             /// <summary>
-            /// 获取界面的缓存类型。
+            /// 获取视图的缓存类型。
             /// </summary>
             CacheType Cache { get; }
 
@@ -182,27 +87,27 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 提供了界面的元数据实现。
+        /// 提供了视图的描述实现。
         /// </summary>
         public class Meta : IMeta
         {
             /// <summary>
-            /// 获取或设置界面的预制体路径。
+            /// 获取或设置视图的预制体路径。
             /// </summary>
             public string Path { get; set; }
 
             /// <summary>
-            /// 获取或设置界面的固定渲染顺序。
+            /// 获取或设置视图的固定渲染顺序。
             /// </summary>
             public int FixedRQ { get; set; }
 
             /// <summary>
-            /// 获取或设置界面的事件类型。
+            /// 获取或设置视图的事件类型。
             /// </summary>
             public EventType Focus { get; set; }
 
             /// <summary>
-            /// 获取或设置界面的缓存类型。
+            /// 获取或设置视图的缓存类型。
             /// </summary>
             public CacheType Cache { get; set; }
 
@@ -212,12 +117,12 @@ namespace EFramework.Modulize
             public bool Multiple { get; set; }
 
             /// <summary>
-            /// 初始化元数据。
+            /// 初始化描述。
             /// </summary>
             public Meta() { }
 
             /// <summary>
-            /// 使用指定参数初始化元数据。
+            /// 使用指定参数初始化描述。
             /// </summary>
             /// <param name="path">预制体路径</param>
             /// <param name="fixedRQ">固定渲染顺序</param>
@@ -235,51 +140,51 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 定义了界面的加载处理器接口。
+        /// 定义了视图的加载处理器接口。
         /// </summary>
         public interface IHandler
         {
             /// <summary>
-            /// 同步加载界面。
+            /// 同步加载视图。
             /// </summary>
-            /// <param name="meta">界面元数据</param>
+            /// <param name="meta">视图描述</param>
             /// <param name="parent">父级变换</param>
-            /// <param name="view">界面实例</param>
-            /// <param name="panel">界面面板</param>
+            /// <param name="view">视图实例</param>
+            /// <param name="panel">视图面板</param>
             void Load(IMeta meta, Transform parent, out IBase view, out GameObject panel);
 
             /// <summary>
-            /// 异步加载界面。
+            /// 异步加载视图。
             /// </summary>
-            /// <param name="meta">界面元数据</param>
+            /// <param name="meta">视图描述</param>
             /// <param name="parent">父级变换</param>
             /// <param name="callback">加载完成回调</param>
             void LoadAsync(IMeta meta, Transform parent, Action<IBase, GameObject> callback);
 
             /// <summary>
-            /// 检查界面是否正在加载。
+            /// 检查视图是否正在加载。
             /// </summary>
-            /// <param name="meta">界面元数据</param>
+            /// <param name="meta">视图描述</param>
             /// <returns>是否正在加载</returns>
             bool Loading(IMeta meta);
 
             /// <summary>
-            /// 设置界面的渲染顺序。
+            /// 设置视图的渲染顺序。
             /// </summary>
-            /// <param name="view">界面实例</param>
+            /// <param name="view">视图实例</param>
             /// <param name="order">渲染顺序</param>
             void SetOrder(IBase view, int order);
 
             /// <summary>
-            /// 设置界面的焦点状态。
+            /// 设置视图的焦点状态。
             /// </summary>
-            /// <param name="view">界面实例</param>
+            /// <param name="view">视图实例</param>
             /// <param name="focus">是否获得焦点</param>
             void SetFocus(IBase view, bool focus);
         }
 
         /// <summary>
-        /// 提供了界面的事件系统实现，支持事件注册、注销和通知。
+        /// 提供了视图的事件系统实现，支持事件注册、注销和通知。
         /// </summary>
         public class Event : XEvent.Manager
         {
@@ -665,38 +570,38 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 定义了界面的基础接口。
+        /// 定义了视图的基础接口。
         /// </summary>
         public interface IBase
         {
             /// <summary>
-            /// 获取或设置界面的元数据。
+            /// 获取或设置视图的描述。
             /// </summary>
             IMeta Meta { get; set; }
 
             /// <summary>
-            /// 获取或设置界面的面板对象。
+            /// 获取或设置视图的面板对象。
             /// </summary>
             GameObject Panel { get; set; }
 
             /// <summary>
-            /// 界面打开时调用。
+            /// 视图打开时调用。
             /// </summary>
             /// <param name="args">打开参数</param>
             void OnOpen(params object[] args);
 
             /// <summary>
-            /// 界面获得焦点时调用。
+            /// 视图获得焦点时调用。
             /// </summary>
             void OnFocus();
 
             /// <summary>
-            /// 界面失去焦点时调用。
+            /// 视图失去焦点时调用。
             /// </summary>
             void OnBlur();
 
             /// <summary>
-            /// 界面关闭时调用。
+            /// 视图关闭时调用。
             /// </summary>
             /// <param name="done">关闭完成回调</param>
             void OnClose(Action done);
@@ -706,29 +611,29 @@ namespace EFramework.Modulize
     public partial class XView
     {
         /// <summary>
-        /// 提供了界面的基础实现。
+        /// 提供了视图的基础实现。
         /// </summary>
         public class Base : MonoBehaviour, IBase
         {
             /// <summary>
-            /// 获取或设置界面的元数据。
+            /// 获取或设置视图的描述。
             /// </summary>
             public virtual IMeta Meta { get; set; }
 
             /// <summary>
-            /// 获取或设置界面的面板对象。
+            /// 获取或设置视图的面板对象。
             /// </summary>
             public virtual GameObject Panel { get; set; }
 
             internal XEvent.Manager @event;
             /// <summary>
-            /// 获取界面的事件管理器。
+            /// 获取视图的事件管理器。
             /// </summary>
             public virtual XEvent.Manager Event { get { @event ??= new Event(); return @event; } }
 
             internal XLog.LogTag tags;
             /// <summary>
-            /// 获取或设置界面的日志标签。
+            /// 获取或设置视图的日志标签。
             /// </summary>
             public virtual XLog.LogTag Tags
             {
@@ -747,83 +652,83 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 初始化界面。
+            /// 初始化视图。
             /// </summary>
             public Base() { }
 
             /// <summary>
-            /// 使用代理初始化界面。
+            /// 使用代理初始化视图。
             /// </summary>
             /// <param name="proxy">代理对象</param>
             public Base(object proxy) { } // PuerTS 类型导出
 
             /// <summary>
-            /// 界面初始化时调用。
+            /// 视图初始化时调用。
             /// </summary>
             public virtual void Awake() { }
 
             /// <summary>
-            /// 界面启用时调用。
+            /// 视图启用时调用。
             /// </summary>
             public virtual void OnEnable() { }
 
             /// <summary>
-            /// 界面打开时调用。
+            /// 视图打开时调用。
             /// </summary>
             /// <param name="args">打开参数</param>
             public virtual void OnOpen(params object[] args) { }
 
             /// <summary>
-            /// 界面获得焦点时调用。
+            /// 视图获得焦点时调用。
             /// </summary>
             public virtual void OnFocus() { }
 
             /// <summary>
-            /// 界面失去焦点时调用。
+            /// 视图失去焦点时调用。
             /// </summary>
             public virtual void OnBlur() { }
 
             /// <summary>
-            /// 界面禁用时调用。
+            /// 视图禁用时调用。
             /// </summary>
             public virtual void OnDisable() { Event?.Clear(); }
 
             /// <summary>
-            /// 界面关闭时调用。
+            /// 视图关闭时调用。
             /// </summary>
             /// <param name="done">关闭完成回调</param>
             public virtual void OnClose(Action done) { done(); }
 
             /// <summary>
-            /// 设置界面焦点。
+            /// 设置视图焦点。
             /// </summary>
             public virtual void Focus() { XView.Focus(this); }
 
             /// <summary>
-            /// 关闭界面。
+            /// 关闭视图。
             /// </summary>
             /// <param name="resume">是否恢复焦点</param>
             public virtual void Close(bool resume = true) { XView.Close(this, resume); }
         }
 
         /// <summary>
-        /// 提供了带模块的界面基础实现。
+        /// 提供了带模块的视图基础实现。
         /// </summary>
         /// <typeparam name="TModule">模块类型</typeparam>
         public class Base<TModule> : Base where TModule : XModule.IBase, new()
         {
             /// <summary>
-            /// 获取界面的模块实例。
+            /// 获取视图的模块实例。
             /// </summary>
             public TModule Module { get => XModule.Base<TModule>.Instance; }
 
             /// <summary>
-            /// 获取界面的事件管理器。
+            /// 获取视图的事件管理器。
             /// </summary>
             public override XEvent.Manager Event { get { @event ??= new Event(Module.Event); return @event; } }
 
             /// <summary>
-            /// 获取或设置界面的日志标签。
+            /// 获取或设置视图的日志标签。
             /// </summary>
             public override XLog.LogTag Tags
             {
@@ -843,36 +748,38 @@ namespace EFramework.Modulize
             }
         }
     }
+    #endregion
 
+    #region 视图管理
     /// <summary>
-    /// 视图管理类，提供界面的加载、显示、隐藏和焦点管理功能。
+    /// 视图管理类，提供视图的加载、显示、隐藏和焦点管理功能。
     /// </summary>
     public partial class XView
     {
         /// <summary>
-        /// 共享的界面加载处理器。
+        /// 共享的视图加载处理器。
         /// </summary>
         internal static IHandler sharedHandler;
 
         /// <summary>
-        /// 缓存的界面列表。
+        /// 缓存的视图列表。
         /// </summary>
         internal static List<IBase> cachedView = new();
 
         /// <summary>
-        /// 打开的界面列表。
+        /// 打开的视图列表。
         /// </summary>
         internal static List<IBase> openedView = new();
 
         /// <summary>
-        /// 获得焦点的界面字典。
+        /// 获得焦点的视图字典。
         /// </summary>
         internal static readonly Dictionary<IBase, bool> focusedView = new();
 
         /// <summary>
         /// 初始化视图系统。
         /// </summary>
-        /// <param name="handler">界面加载处理器</param>
+        /// <param name="handler">视图加载处理器</param>
         public static void Initialize(IHandler handler)
         {
             sharedHandler = handler ?? throw new ArgumentNullException("handler");
@@ -896,12 +803,12 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 加载界面。
+        /// 加载视图。
         /// </summary>
-        /// <param name="meta">界面元数据</param>
+        /// <param name="meta">视图描述</param>
         /// <param name="parent">父级变换</param>
         /// <param name="closeIfOpened">如果已打开则关闭</param>
-        /// <returns>界面实例</returns>
+        /// <returns>视图实例</returns>
         public static IBase Load(IMeta meta, Transform parent, bool closeIfOpened)
         {
             IBase view = null;
@@ -942,10 +849,10 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 查找界面。
+        /// 查找视图。
         /// </summary>
-        /// <param name="meta">界面元数据</param>
-        /// <returns>界面实例</returns>
+        /// <param name="meta">视图描述</param>
+        /// <returns>视图实例</returns>
         public static IBase Find(IMeta meta)
         {
             if (meta != null)
@@ -963,11 +870,11 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 打开界面。
+        /// 打开视图。
         /// </summary>
-        /// <param name="target">目标界面</param>
+        /// <param name="target">目标视图</param>
         /// <param name="args">打开参数</param>
-        /// <returns>界面实例</returns>
+        /// <returns>视图实例</returns>
         public static IBase Open(IMeta target, params object[] args)
         {
             // [TONOTE]: 兼容js拦截函数参数类型匹配错误问题
@@ -987,23 +894,23 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 打开界面。
+        /// 打开视图。
         /// </summary>
-        /// <param name="target">目标界面</param>
+        /// <param name="target">目标视图</param>
         /// <param name="parent">父级变换</param>
         /// <param name="args">打开参数</param>
-        /// <returns>界面实例</returns>
+        /// <returns>视图实例</returns>
         public static IBase Open(IMeta target, Transform parent, params object[] args) { return Open(target, null, null, parent, args); }
 
         /// <summary>
-        /// 打开界面。
+        /// 打开视图。
         /// </summary>
-        /// <param name="target">目标界面</param>
-        /// <param name="below">下方界面</param>
-        /// <param name="above">上方界面</param>
+        /// <param name="target">目标视图</param>
+        /// <param name="below">下方视图</param>
+        /// <param name="above">上方视图</param>
         /// <param name="parent">父级变换</param>
         /// <param name="args">打开参数</param>
-        /// <returns>界面实例</returns>
+        /// <returns>视图实例</returns>
         public static IBase Open(IMeta target, IMeta below, IMeta above, Transform parent, params object[] args)
         {
             var view = Load(target, parent, true);
@@ -1021,11 +928,11 @@ namespace EFramework.Modulize
         public static bool OpenAsync(IMeta target, Transform parent, Action<IBase> callback = null, params object[] args) { return OpenAsync(target, null, null, parent, callback, args); }
 
         /// <summary>
-        /// 异步打开界面。
+        /// 异步打开视图。
         /// </summary>
-        /// <param name="target">目标界面</param>
-        /// <param name="below">下方界面</param>
-        /// <param name="above">上方界面</param>
+        /// <param name="target">目标视图</param>
+        /// <param name="below">下方视图</param>
+        /// <param name="above">上方视图</param>
         /// <param name="parent">父级变换</param>
         /// <param name="callback">打开完成回调</param>
         /// <param name="args">打开参数</param>
@@ -1100,11 +1007,11 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 排序界面。
+        /// 排序视图。
         /// </summary>
-        /// <param name="view">目标界面</param>
-        /// <param name="below">下方界面</param>
-        /// <param name="above">上方界面</param>
+        /// <param name="view">目标视图</param>
+        /// <param name="below">下方视图</param>
+        /// <param name="above">上方视图</param>
         public static void Sort(IBase view, IBase below, IBase above)
         {
             if (view != null)
@@ -1199,9 +1106,9 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 设置界面焦点。
+        /// 设置视图焦点。
         /// </summary>
-        /// <param name="meta">界面元数据</param>
+        /// <param name="meta">视图描述</param>
         public static void Focus(IMeta meta)
         {
             if (meta != null)
@@ -1220,9 +1127,9 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 设置界面焦点。
+        /// 设置视图焦点。
         /// </summary>
-        /// <param name="view">界面实例</param>
+        /// <param name="view">视图实例</param>
         public static void Focus(IBase view)
         {
             if (view != null)
@@ -1241,14 +1148,14 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 恢复界面焦点。
+        /// 恢复视图焦点。
         /// </summary>
         public static void Resume() { Sort(null, null, null); }
 
         /// <summary>
-        /// 关闭界面。
+        /// 关闭视图。
         /// </summary>
-        /// <param name="meta">界面元数据</param>
+        /// <param name="meta">视图描述</param>
         /// <param name="resume">是否恢复焦点</param>
         public static void Close(IMeta meta, bool resume = true)
         {
@@ -1283,9 +1190,9 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 关闭界面。
+        /// 关闭视图。
         /// </summary>
-        /// <param name="view">界面实例</param>
+        /// <param name="view">视图实例</param>
         /// <param name="resume">是否恢复焦点</param>
         public static void Close(IBase view, bool resume = true)
         {
@@ -1320,9 +1227,9 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 关闭所有界面。
+        /// 关闭所有视图。
         /// </summary>
-        /// <param name="exclude">排除的界面</param>
+        /// <param name="exclude">排除的视图</param>
         public static void CloseAll(params IMeta[] exclude)
         {
             var index = 0;
@@ -1344,4 +1251,5 @@ namespace EFramework.Modulize
             Resume();
         }
     }
+    #endregion
 }
