@@ -1,18 +1,10 @@
 {
     "name": "EFramework.Modulize.Tests",
-    "rootNamespace": "",
     "references": [
-        "UnityEngine.TestRunner",
         "EFramework.Modulize",
         "EFramework.Utility"
     ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
 }
