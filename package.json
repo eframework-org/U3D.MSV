@@ -24,7 +24,7 @@
     "modulize"
   ],
   "dependencies": {
-    "org.eframework.u3d.util": "0.0.2"
+    "org.eframework.u3d.util": "0.0.3"
   },
   "puerAdapter": ".puer",
   "puerExports": [
