@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
+using System;
 using EFramework.Utility;
 
 namespace EFramework.Modulize
@@ -113,15 +114,55 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
+        /// 定义了属性标记事件方法
+        /// </summary>
+        /// <remarks>
+        /// 使用此特性可以为事件定义参数，支持：
+        /// - 参数事件ID、模块类型和是否一次使用
+        /// - 自动对模块注册事件
+        /// </remarks>
+        [AttributeUsage(AttributeTargets.Method)]
+        public class Event : Attribute
+        {
+            /// <summary>
+            /// 事件ID
+            /// </summary>
+            public object ID { get; }
+            /// <summary>
+            /// 模块类型
+            /// </summary>
+            public Type Module { get; }
+            /// <summary>
+            /// 是否一次使用
+            /// </summary>
+            public bool Once { get; }
+
+            public Event(object id, Type module = null, bool once = false)
+            {
+                this.ID = id;
+                this.Module = module;
+                this.Once = once;
+            }
+        }
+
+        /// <summary>
         /// 提供了模块的基础实现，包含默认的生命周期管理和事件系统集成。
         /// </summary>
         public class Base : IBase
         {
             internal string name;
+
             /// <summary>
             /// 获取模块名称，如果未设置则返回类型名称。
             /// </summary>
-            public virtual string Name { get { name ??= GetType().Name; return name; } }
+            public virtual string Name
+            {
+                get
+                {
+                    name ??= GetType().Name;
+                    return name;
+                }
+            }
 
             /// <summary>
             /// 获取或设置模块是否启用。
@@ -129,16 +170,33 @@ namespace EFramework.Modulize
             public virtual bool Enabled { get; set; }
 
             internal XEvent.Manager @event;
+
             /// <summary>
             /// 获取模块的事件管理器，如果未初始化则创建新实例。
             /// </summary>
-            public virtual XEvent.Manager Event { get { @event ??= new XEvent.Manager(); return @event; } }
+            public virtual XEvent.Manager Event
+            {
+                get
+                {
+                    @event ??= new XEvent.Manager();
+                    return @event;
+                }
+            }
 
             internal XLog.LogTag tags;
+
             /// <summary>
             /// 获取或设置模块的日志标签，包含模块名称和哈希值。
             /// </summary>
-            public virtual XLog.LogTag Tags { get { tags ??= XLog.GetTag().Set("Name", Name).Set("Hash", GetHashCode().ToString()); return tags; } set { tags = value; } }
+            public virtual XLog.LogTag Tags
+            {
+                get
+                {
+                    tags ??= XLog.GetTag().Set("Name", Name).Set("Hash", GetHashCode().ToString());
+                    return tags;
+                }
+                set { tags = value; }
+            }
 
             /// <summary>
             /// 模块初始化时调用，记录日志。
@@ -198,6 +256,7 @@ namespace EFramework.Modulize
                         instance = new TModule();
                         instance.Awake();
                     }
+
                     return instance;
                 }
             }

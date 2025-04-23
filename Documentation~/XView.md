@@ -54,6 +54,26 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
     Event.Notify(eid, manager, args);
     ```
 
+4. 属性标记
+    ```csharp
+    private class MyView : XView.Base
+    {
+        // UI绑定、UI事件绑定
+        [XView.Element("@Login", "OnClickBtnLogin")]
+        private Button m_BtnLogin;
+
+        // 模块事件注册
+        [XModule.Event(MyEvent.OnMyTest1, typeof(MyModule))]
+        private void OnMyTest1()
+        {
+        }
+    
+        private void OnClickBtnLogin()
+        {
+        }
+    }
+    ```
+
 ### 2. 视图管理
 
 1. 初始化

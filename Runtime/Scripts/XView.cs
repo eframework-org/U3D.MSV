@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using EFramework.Utility;
 using UnityEngine.SceneManagement;
@@ -18,7 +19,7 @@ namespace EFramework.Modulize
     /// 功能特性
     /// - 业务处理器：通过 handler 控制视图，实现了加载、显示、排序等功能
     /// - 多插件适配：支持 Unity UI、FairyGUI、Next Gen GUI 等 UI 插件
-    /// 
+    /// - 属性标记（UI绑定、事件绑定，事件注册等）
     /// 使用手册
     /// 1. 创建视图
     /// 
@@ -54,6 +55,25 @@ namespace EFramework.Modulize
     /// 
     ///     // 触发事件
     ///     Event.Notify(eid, manager, args);
+    ///
+    /// 1.4 属性标记
+    /// 
+    ///     private class MyView : XView.Base
+    ///     {
+    ///         // UI绑定、UI事件绑定
+    ///         [XView.Element("@Login", "OnClickBtnLogin")]
+    ///         private Button m_BtnLogin;
+    ///
+    ///         // 模块事件注册
+    ///         [XModule.Event(MyEvent.OnMyTest1, typeof(MyModule))]
+    ///         private void OnMyTest1()
+    ///         {
+    ///         }
+    ///
+    ///         private void OnClickBtnLogin()
+    ///         {
+    ///         }
+    ///     }
     /// 
     /// 2. 视图管理
     /// 
@@ -84,6 +104,11 @@ namespace EFramework.Modulize
     ///         public void SetFocus(XView.IBase view, bool focus)
     ///         {
     ///             // 实现焦点设置逻辑
+    ///         }
+    ///
+    ///         public void Bind(MonoBehaviour target, XView.BindMeta meta)
+    ///         {
+    ///             //  实现UI绑定逻辑
     ///         }
     ///     }
     /// 
@@ -117,7 +142,9 @@ namespace EFramework.Modulize
     /// </code>
     /// 更多信息请参考视图文档。
     /// </remarks>
+
     #region 基础视图
+
     public partial class XView
     {
         /// <summary>
@@ -288,6 +315,8 @@ namespace EFramework.Modulize
             /// <param name="view">视图实例</param>
             /// <param name="focus">是否获得焦点</param>
             void SetFocus(IBase view, bool focus);
+
+            void Bind(MonoBehaviour target, BindMeta meta);
         }
 
         /// <summary>
@@ -341,14 +370,10 @@ namespace EFramework.Modulize
                         proxies.Add(eid, list);
                     }
 
-                    var proxy = new EvtProxy
-                    {
-                        ID = callback.GetHashCode(),
-                        Context = manager,
-                        Callback = callback
-                    };
+                    var proxy = new EvtProxy { ID = callback.GetHashCode(), Context = manager, Callback = callback };
                     list.Add(proxy);
                 }
+
                 return ret;
             }
 
@@ -503,9 +528,11 @@ namespace EFramework.Modulize
                         {
                             ret &= proxy.Context.Unreg(eid, proxy.Callback);
                         }
+
                         proxies.Remove(eid);
                     }
                 }
+
                 return ret;
             }
 
@@ -534,6 +561,7 @@ namespace EFramework.Modulize
                         }
                     }
                 }
+
                 return ret;
             }
 
@@ -575,6 +603,7 @@ namespace EFramework.Modulize
                         }
                     }
                 }
+
                 return ret;
             }
 
@@ -618,6 +647,7 @@ namespace EFramework.Modulize
                         }
                     }
                 }
+
                 return ret;
             }
 
@@ -647,6 +677,7 @@ namespace EFramework.Modulize
                         proxy.Context.Unreg(kvp.Key, proxy.Callback);
                     }
                 }
+
                 proxies.Clear();
                 base.Clear();
             }
@@ -713,6 +744,104 @@ namespace EFramework.Modulize
             /// <param name="done">关闭完成回调</param>
             void OnClose(Action done);
         }
+        
+        /// <summary>
+        /// 定义了属性标记UI元件的字段
+        /// </summary>
+        /// <remarks>
+        /// 使用此特性可以为元件定义参数，支持：
+        /// - 参数路径名称和方法名
+        /// - 自动绑定UI
+        /// - 自动绑定Event
+        /// </remarks>
+        [AttributeUsage(AttributeTargets.Field)]
+        public class Element : Attribute
+        {
+            /// <summary>
+            /// 路径名称
+            /// </summary>
+            public string Name { get; }
+
+            /// <summary>
+            /// 附加参数，用于扩展功能
+            /// </summary>
+            public string Extras { get; }
+
+            public Element(string name, string extras = null)
+            {
+                this.Name = name;
+                this.Extras = extras;
+            }
+        }
+
+        /// <summary>
+        /// 定义了绑定的元数据
+        /// </summary>
+        public struct BindMeta
+        {
+            /// <summary>
+            /// 实例字段
+            /// </summary>
+            public FieldInfo Field { get; set; }
+
+            /// <summary>
+            /// 元件名称路径
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// 实例方法
+            /// </summary>
+            public MethodInfo Method { get; set; }
+
+            public BindMeta(FieldInfo field, string name, MethodInfo method)
+            {
+                Field = field;
+                Name = name;
+                Method = method;
+            }
+        }
+
+        /// <summary>
+        /// 缓存全局绑定元数据的容器
+        /// </summary>
+        internal static readonly Dictionary<Type, List<BindMeta>> BindMetas = new();
+
+        /// <summary>
+        /// 事件元数据
+        /// </summary>
+        public class EventMeta
+        {
+            /// <summary>
+            /// 事件ID
+            /// </summary>
+            public int ID;
+            /// <summary>
+            /// 注册模块
+            /// </summary>
+            public XModule.Base Module;
+            /// <summary>
+            /// 事件方法
+            /// </summary>
+            public MethodInfo Method;
+            /// <summary>
+            /// 一次性
+            /// </summary>
+            public bool Once;
+
+            public EventMeta(int id, XModule.Base module, MethodInfo method, bool once)
+            {
+                this.ID = id;
+                this.Module = module;
+                this.Method = method;
+                this.Once = once;
+            }
+        }
+
+        /// <summary>
+        /// 缓存全局事件元数据的容器
+        /// </summary>
+        internal static readonly Dictionary<Type, List<EventMeta>> EventMetas = new();
     }
 
     public partial class XView
@@ -733,12 +862,21 @@ namespace EFramework.Modulize
             public virtual GameObject Panel { get; set; }
 
             internal XEvent.Manager @event;
+
             /// <summary>
             /// 获取视图的事件管理器。
             /// </summary>
-            public virtual XEvent.Manager Event { get { @event ??= new Event(); return @event; } }
+            public virtual XEvent.Manager Event
+            {
+                get
+                {
+                    @event ??= new Event();
+                    return @event;
+                }
+            }
 
             internal XLog.LogTag tags;
+
             /// <summary>
             /// 获取或设置视图的日志标签。
             /// </summary>
@@ -753,6 +891,7 @@ namespace EFramework.Modulize
                         tags.Set("Comp", GetType().FullName);
                         tags.Set("Hash", GetHashCode().ToString());
                     }
+
                     return tags;
                 }
                 set => tags = value;
@@ -772,12 +911,81 @@ namespace EFramework.Modulize
             /// <summary>
             /// 视图初始化时调用。
             /// </summary>
-            public virtual void Awake() { }
+            public virtual void Awake()
+            {
+                var type = this.GetType();
+                if (BindMetas.TryGetValue(type, out var bMetas))
+                {
+                    foreach (var meta in bMetas)
+                    {
+                        sharedHandler.Bind(this, meta);
+                    }
+                }
+                else
+                {
+                    BindMetas[type] = new List<BindMeta>();
+                    var fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+                    foreach (var field in fields)
+                    {
+                        if (Attribute.GetCustomAttribute(field, typeof(Element)) is Element element)
+                        {
+                            MethodInfo method = null;
+                            if (!string.IsNullOrEmpty(element.Extras))
+                            {
+                                method = type.GetMethod(element.Extras, BindingFlags.Instance | BindingFlags.NonPublic);
+                                if (method == null)
+                                {
+                                    XLog.Error("XView.Binder: Unable to find the method {0} on type {1}.", element.Extras, type);
+                                    return;
+                                }
+                            }
+
+                            var meta = new BindMeta(field, element.Name, method);
+                            sharedHandler.Bind(this, meta);
+                            BindMetas[type].Add(meta);
+                        }
+                    }
+                }
+
+                if (!EventMetas.ContainsKey(type))
+                {
+                    EventMetas.Add(type, new List<EventMeta>());
+                    var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
+                    foreach (var method in methods)
+                    {
+                        if (Attribute.GetCustomAttribute(method, typeof(XModule.Event)) is XModule.Event evt)
+                        {
+                            if (evt.Module != null)
+                            {
+                                var insInfo = evt.Module.GetProperty("Instance", BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Static);
+                                if (insInfo == null)
+                                {
+                                    XLog.Error("XView.Binder: Unable to find the module instance {0}.", evt.Module);
+                                    return;
+                                }
+
+                                var module = insInfo.GetValue(null) as XModule.Base;
+                                EventMetas[type].Add(new EventMeta((int)evt.ID, module, method, evt.Once));
+                            }
+                        }
+                    }
+                }
+            }
 
             /// <summary>
             /// 视图启用时调用。
             /// </summary>
-            public virtual void OnEnable() { }
+            public virtual void OnEnable()
+            {
+                var type = this.GetType();
+                if (EventMetas.TryGetValue(type, out var eMetas))
+                {
+                    foreach (var meta in eMetas)
+                    {
+                        ((Event)this.Event).Reg(meta.ID, args => meta.Method.Invoke(this, args), meta.Module.Event, meta.Once);
+                    }
+                }
+            }
 
             /// <summary>
             /// 视图打开时调用。
@@ -832,7 +1040,14 @@ namespace EFramework.Modulize
             /// <summary>
             /// 获取视图的事件管理器。
             /// </summary>
-            public override XEvent.Manager Event { get { @event ??= new Event(Module.Event); return @event; } }
+            public override XEvent.Manager Event
+            {
+                get
+                {
+                    @event ??= new Event(Module.Event);
+                    return @event;
+                }
+            }
 
             /// <summary>
             /// 获取或设置视图的日志标签。
@@ -849,15 +1064,18 @@ namespace EFramework.Modulize
                         tags.Set("Hash", GetHashCode().ToString());
                         tags.Set("Module", Module == null ? "null" : Module.Name);
                     }
+
                     return tags;
                 }
                 set => tags = value;
             }
         }
     }
+
     #endregion
 
     #region 视图管理
+
     public partial class XView
     {
         /// <summary>
@@ -925,6 +1143,7 @@ namespace EFramework.Modulize
                     view = null;
                 }
             }
+
             if (view == null)
             {
                 for (var i = 0; i < cachedView.Count; i++)
@@ -939,6 +1158,7 @@ namespace EFramework.Modulize
                     }
                 }
             }
+
             if (view == null)
             {
                 sharedHandler.Load(meta, parent, out view, out var panel);
@@ -949,6 +1169,7 @@ namespace EFramework.Modulize
                     sharedHandler.SetFocus(view, true);
                 }
             }
+
             return view;
         }
 
@@ -970,6 +1191,7 @@ namespace EFramework.Modulize
                     }
                 }
             }
+
             return null;
         }
 
@@ -1029,7 +1251,10 @@ namespace EFramework.Modulize
 
         public static bool OpenAsync(IMeta target, Action<IBase> callback = null, params object[] args) { return OpenAsync(target, null, null, null, callback, args); }
 
-        public static bool OpenAsync(IMeta target, Transform parent, Action<IBase> callback = null, params object[] args) { return OpenAsync(target, null, null, parent, callback, args); }
+        public static bool OpenAsync(IMeta target, Transform parent, Action<IBase> callback = null, params object[] args)
+        {
+            return OpenAsync(target, null, null, parent, callback, args);
+        }
 
         /// <summary>
         /// 异步打开视图。
@@ -1053,6 +1278,7 @@ namespace EFramework.Modulize
                     view = null;
                 }
             }
+
             if (view == null)
             {
                 for (var i = 0; i < cachedView.Count; i++)
@@ -1067,12 +1293,14 @@ namespace EFramework.Modulize
                     }
                 }
             }
+
             if (view == null)
             {
                 if (!target.Multiple && sharedHandler.Loading(target))
                 {
                     try { callback?.Invoke(null); }
                     catch (Exception e) { XLog.Panic(e); }
+
                     return false;
                 }
                 else
@@ -1091,6 +1319,7 @@ namespace EFramework.Modulize
                             Sort(view, belowWin, aboveWin);
                             view.OnOpen(args);
                         }
+
                         try { callback?.Invoke(view); }
                         catch (Exception e) { XLog.Panic(e); }
                     });
@@ -1107,6 +1336,7 @@ namespace EFramework.Modulize
                 try { callback?.Invoke(view); }
                 catch (Exception e) { XLog.Panic(e); }
             }
+
             return true;
         }
 
@@ -1147,11 +1377,13 @@ namespace EFramework.Modulize
                         }
                     }
                 }
+
                 if (!inserted)
                 {
                     openedView.Add(view);
                 }
             }
+
             var index = openedView.Count - 1;
             var rqIndex = index;
             var lastFocused = false;
@@ -1176,6 +1408,7 @@ namespace EFramework.Modulize
                         sharedHandler.SetOrder(temp, 1000 + (rqIndex - 1) * 500);
                         rqIndex -= 1;
                     }
+
                     if (temp.Meta.Focus == EventType.Slience)
                     {
                         if (focused)
@@ -1193,6 +1426,7 @@ namespace EFramework.Modulize
                             sharedHandler.SetFocus(temp, true);
                             temp.OnFocus();
                         }
+
                         lastFocused = true;
                     }
                     else
@@ -1205,6 +1439,7 @@ namespace EFramework.Modulize
                         }
                     }
                 }
+
                 index--;
             }
         }
@@ -1276,6 +1511,7 @@ namespace EFramework.Modulize
                             cachedView.Add(temp);
                             if (temp.Meta.Cache == CacheType.Shared) UnityEngine.Object.DontDestroyOnLoad(temp.Panel);
                         }
+
                         var post = new Action(() =>
                         {
                             focusedView.Remove(temp);
@@ -1289,6 +1525,7 @@ namespace EFramework.Modulize
                         break;
                     }
                 }
+
                 if (resume) Resume();
             }
         }
@@ -1313,6 +1550,7 @@ namespace EFramework.Modulize
                             cachedView.Add(temp);
                             if (temp.Meta.Cache == CacheType.Shared) UnityEngine.Object.DontDestroyOnLoad(temp.Panel);
                         }
+
                         var post = new Action(() =>
                         {
                             focusedView.Remove(temp);
@@ -1326,6 +1564,7 @@ namespace EFramework.Modulize
                         break;
                     }
                 }
+
                 if (resume) Resume();
             }
         }
@@ -1349,11 +1588,14 @@ namespace EFramework.Modulize
                         break;
                     }
                 }
+
                 if (close) Close(view.Meta, false);
                 else index++;
             }
+
             Resume();
         }
     }
+
     #endregion
 }

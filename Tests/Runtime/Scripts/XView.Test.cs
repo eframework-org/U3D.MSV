@@ -12,16 +12,22 @@ using UnityEngine.TestTools;
 using System.Collections;
 using System.Text.RegularExpressions;
 using UnityEngine.SceneManagement;
+using System.Reflection;
+using EFramework.Utility;
+using UnityEngine.UI;
 
 public class TestXView
 {
     #region 视图测试准备
+
     private class MyHandler : XView.IHandler
     {
         public XView.IBase lastFocusedView;
         public List<XView.IBase> viewOrder = new List<XView.IBase>();
         public XView.IBase lastSetOrderView;
         public int lastSetOrderValue;
+        public List<XView.BindMeta> bindMetas = new();
+        public List<MonoBehaviour> bindViews = new();
 
         public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
         {
@@ -29,7 +35,7 @@ public class TestXView
             if (parent != null)
                 panel.transform.SetParent(parent, false);
 
-            var myView = panel.AddComponent<MyView>();
+            var myView = panel.AddComponent<MyView1>();
             myView.Meta = meta;
             myView.Panel = panel;
             view = myView;
@@ -43,7 +49,7 @@ public class TestXView
             if (parent != null)
                 panel.transform.SetParent(parent, false);
 
-            var mockView = panel.AddComponent<MyView>();
+            var mockView = panel.AddComponent<MyView1>();
             mockView.Meta = meta;
             mockView.Panel = panel;
 
@@ -66,9 +72,66 @@ public class TestXView
         {
             if (focus) lastFocusedView = view;
         }
+
+        public void Bind(MonoBehaviour target, XView.BindMeta meta)
+        {
+            bindMetas.Add(meta);
+            bindViews.Add(target);
+
+            if (meta.Field.FieldType == typeof(Button))
+            {
+                var go = new GameObject("@Login");
+                go.SetParent(target.gameObject);
+                var btn = go.AddComponent<Button>();
+
+                meta.Field.SetValue(target, btn);
+                if (meta.Method != null) btn.onClick.AddListener(() => meta.Method.Invoke(target, null));
+            }
+            else if (meta.Field.FieldType == typeof(InputField))
+            {
+                var go = new GameObject("@Password");
+                go.SetParent(target.gameObject);
+                var ip = go.AddComponent<InputField>();
+
+                meta.Field.SetValue(target, ip);
+                if (meta.Method != null) ip.onSubmit.AddListener((value) => meta.Method.Invoke(target, new object[] { value }));
+            }
+            else if (meta.Field.FieldType == typeof(Dropdown))
+            {
+                var go = new GameObject("@Select");
+                go.SetParent(target.gameObject);
+                var dp = go.AddComponent<Dropdown>();
+
+                meta.Field.SetValue(target, dp);
+                if (meta.Method != null) dp.onValueChanged.AddListener((value) => meta.Method.Invoke(target, new object[] { value }));
+            }
+            else if (meta.Field.FieldType == typeof(Toggle))
+            {
+                var go = new GameObject("@Open");
+                go.SetParent(target.gameObject);
+                var tg = go.AddComponent<Toggle>();
+
+                meta.Field.SetValue(target, tg);
+                if (meta.Method != null) tg.onValueChanged.AddListener((isOn) => meta.Method.Invoke(target, new object[] { isOn }));
+            }
+            else
+            {
+                //TODO: 绑定其他类型控件
+            }
+        }
     }
 
-    private class MyView : XView.Base
+    public class MyModule : XModule.Base<MyModule>
+    {
+    }
+
+    private enum MyEvent
+    {
+        OnMyTest1,
+        OnMyTest2,
+    }
+
+    private class MyView1 : XView.Base
     {
         public Action OnOpenCallback;
         public Action OnFocusCallback;
@@ -101,6 +164,66 @@ public class TestXView
         }
     }
 
+    private class MyView2 : XView.Base
+    {
+        [XView.Element("@Login", "OnClickBtnLogin")]
+        private Button m_BtnLogin;
+
+        public bool IsBtnOk = false;
+
+        [XView.Element("@Password", "OnSubmitIpPassword")]
+        private InputField m_IpPassword;
+
+        public bool IsIpOk = false;
+
+        [XView.Element("@Select", "OnValueChangedDpSelect")]
+        private Dropdown m_DpSelect;
+
+        public bool IsDpOk = false;
+
+        [XView.Element("@Open", "OnValueChangedTgOpen")]
+        private Toggle m_TgOpen;
+
+        public bool IsTgOk = false;
+
+        public bool IsEventOk1 = false;
+        public bool IsEventOk2 = false;
+
+        [XModule.Event(MyEvent.OnMyTest1, typeof(MyModule))]
+        private void OnMyTest1()
+        {
+            XLog.Notice("OnMyTest1: OnShowTitle");
+            IsEventOk1 = true;
+        }
+
+        [XModule.Event(MyEvent.OnMyTest2, typeof(MyModule))]
+        private void OnMyTest2(int value, string str)
+        {
+            XLog.Notice("OnMyTest2: OnShowTitle {0}     {1}", value, str);
+            IsEventOk2 = true;
+        }
+
+        private void OnClickBtnLogin()
+        {
+            IsBtnOk = true;
+        }
+
+        private void OnSubmitIpPassword(string value)
+        {
+            IsIpOk = true;
+        }
+
+        private void OnValueChangedDpSelect(int value)
+        {
+            IsDpOk = true;
+        }
+
+        private void OnValueChangedTgOpen(bool isOn)
+        {
+            IsTgOk = true;
+        }
+    }
+
     private class MyEventView1 : XView.Base
     {
         public Action Callback = null;
@@ -110,6 +233,7 @@ public class TestXView
     {
         public Action Callback = null;
         private MyEventView1 view1;
+
         public MyEventView1 View1
         {
             get
@@ -150,9 +274,11 @@ public class TestXView
         if (testPanel != null) GameObject.Destroy(testPanel);
         XView.CloseAll();
     }
+
     #endregion
 
     #region 基础视图测试
+
     [Test]
     public void Meta()
     {
@@ -254,7 +380,7 @@ public class TestXView
     {
         // 测试Base类的基本方法
         var obj = new GameObject();
-        var myView = obj.AddComponent<MyView>();
+        var myView = obj.AddComponent<MyView1>();
         myView.Meta = testMeta;
         myView.Panel = obj;
 
@@ -283,9 +409,11 @@ public class TestXView
         Assert.IsTrue(closeCalled, "OnClose方法应当调用OnCloseCallback");
         Assert.IsTrue(closeDoneCalled, "OnClose方法应当执行传入的done回调");
     }
+
     #endregion
 
     #region 视图管理测试
+
     [UnityTest]
     public IEnumerator Init()
     {
@@ -489,7 +617,7 @@ public class TestXView
         var silenceMeta = new XView.Meta("SilenceView", 0, XView.EventType.Slience);
         var silenceView = XView.Open(silenceMeta);
         var blurCalled = false;
-        (silenceView as MyView).OnBlurCallback = () => blurCalled = true;
+        (silenceView as MyView1).OnBlurCallback = () => blurCalled = true;
 
         // 确保视图先获得焦点
         XView.focusedView[silenceView] = true;
@@ -509,8 +637,8 @@ public class TestXView
         var dynamicView = XView.Open(dynamicMeta);
         var staticFocusCalled = false;
         var dynamicFocusCalled = false;
-        (staticView as MyView).OnFocusCallback = () => staticFocusCalled = true;
-        (dynamicView as MyView).OnFocusCallback = () => dynamicFocusCalled = true;
+        (staticView as MyView1).OnFocusCallback = () => staticFocusCalled = true;
+        (dynamicView as MyView1).OnFocusCallback = () => dynamicFocusCalled = true;
 
         // 先清空焦点状态
         XView.openedView.Clear();
@@ -561,6 +689,70 @@ public class TestXView
 
         if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
     }
+
+    [Test]
+    public void Bind()
+    {
+        MyModule.Instance.Start();
+
+        var obj = new GameObject();
+        var uView = obj.AddComponent<MyView2>();
+        uView.Meta = testMeta;
+        uView.Panel = obj;
+
+        // 测试是否缓存
+        Assert.IsNotNull(XView.BindMetas[typeof(MyView2)]);
+        foreach (var bindView in myHandler.bindViews)
+        {
+            Assert.AreSame(uView, bindView);
+        }
+
+        foreach (var bindMeta in myHandler.bindMetas)
+        {
+            Assert.IsTrue(XView.BindMetas[typeof(MyView2)].Contains(bindMeta));
+        }
+
+        // 测试是否绑定UI
+        var uBtn = uView.GetType().GetField("m_BtnLogin", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(uBtn.GetValue(uView));
+        var uIp = uView.GetType().GetField("m_IpPassword", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(uIp.GetValue(uView));
+        var uDp = uView.GetType().GetField("m_DpSelect", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(uDp.GetValue(uView));
+        var uTg = uView.GetType().GetField("m_TgOpen", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(uTg.GetValue(uView));
+
+        // 测试是否绑定事件并且正常触发事件
+        var btnU = uBtn.GetValue(uView) as Button;
+        btnU.onClick.Invoke();
+        Assert.IsTrue(uView.IsBtnOk);
+        var ipU = uIp.GetValue(uView) as InputField;
+        ipU.onSubmit.Invoke("This is a test");
+        Assert.IsTrue(uView.IsIpOk);
+        var dpU = uDp.GetValue(uView) as Dropdown;
+        dpU.onValueChanged.Invoke(0);
+        Assert.IsTrue(uView.IsDpOk);
+        var tgU = uTg.GetValue(uView) as Toggle;
+        tgU.onValueChanged.Invoke(true);
+        Assert.IsTrue(uView.IsTgOk);
+
+        //无参
+        MyModule.Instance.Event.Notify(MyEvent.OnMyTest1);
+        Assert.IsTrue(uView.IsEventOk1);
+        //多参
+        MyModule.Instance.Event.Notify(MyEvent.OnMyTest2, 1, "This is a test");
+        Assert.IsTrue(uView.IsEventOk2);
+
+        // 测试多实例是否会重复缓存
+        var obj2 = new GameObject();
+        var uView2 = obj2.AddComponent<MyView2>();
+        uView2.Meta = testMeta;
+        uView2.Panel = obj2;
+
+        Assert.IsNotNull(XView.BindMetas[typeof(MyView2)]);
+        Assert.IsTrue(XView.BindMetas.Count == 1);
+    }
+
     #endregion
 }
 #endif
