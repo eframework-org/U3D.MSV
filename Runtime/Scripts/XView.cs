@@ -745,6 +745,29 @@ namespace EFramework.Modulize
             void OnClose(Action done);
         }
         
+        public interface IBind
+        {
+            /// <summary>
+            /// 绑定的Target
+            /// </summary>
+            MonoBehaviour Target { get; set; }
+
+            /// <summary>
+            /// 预设的Root，可通过这个根据路径搜索到对应的UI
+            /// </summary>
+            object Root { get; set; }
+
+            /// <summary>
+            /// 用于存储当前绑定的事件，便于扩展
+            /// </summary>
+            Dictionary<Type, Action<object, object, MethodInfo>> Events { get; set; }
+
+            /// <summary>
+            /// 绑定
+            /// </summary>
+            void Bind(XView.BindMeta meta);
+        }
+        
         /// <summary>
         /// 定义了属性标记UI元件的字段
         /// </summary>
