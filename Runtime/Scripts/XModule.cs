@@ -100,6 +100,11 @@ namespace EFramework.Modulize
     ///     var events = XModule.Event.Get(typeof(MyListener));
     /// 
     ///     // TODO: 根据标记的事件特性注册事件
+    ///
+    /// 事件特性说明：
+    /// - 支持事件标识（`ID`）、模块类型（字段名必须为 `Instance`）及单次回调（`Once=true`）等标记选项
+    /// - 支持实例方法和静态方法及多种方法签名（无参、有参、返回值），支持继承类中的事件特性
+    /// - 特性标记维护只事件的元数据，需要业务层自行实现事件注册/注销的行为
     /// </code>
     /// 更多信息请参考模块文档。
     /// </remarks>
