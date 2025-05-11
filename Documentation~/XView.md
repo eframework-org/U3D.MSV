@@ -2,13 +2,14 @@
 
 [![Version](https://img.shields.io/npm/v/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)
 [![Downloads](https://img.shields.io/npm/dm/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)  
+[![DeepWiki](https://img.shields.io/badge/DeepWiki-Explore-blue)](https://deepwiki.com/eframework-org/U3D.MSV)
 
 XView 提供了业务开发的基础视图，通过业务处理器（Handler）的模式实现了视图的管理功能。
 
 ## 功能特性
 
 - 业务处理器：通过 handler 控制视图，实现了加载、显示、排序等功能
-- 多插件适配：支持 Unity UI、FairyGUI、Next Gen GUI 等 UI 插件
+- 高可用拓展：提供了视图元素特性标记，支持 Unity UI、FairyGUI、Next Gen GUI 等 UI 插件
 
 ## 使用手册
 
@@ -33,26 +34,90 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
     ```
 
 3. 事件系统
+
+基础事件示例：
+
     ```csharp
     // 注册事件
     Event.Reg(eid, callback);
     Event.Reg<T1>(eid, callback);
     Event.Reg<T1, T2>(eid, callback);
     Event.Reg<T1, T2, T3>(eid, callback);
-    ```
 
-    ```csharp
     // 注销事件
     Event.Unreg(eid, callback);
     Event.Unreg<T1>(eid, callback);
     Event.Unreg<T1, T2>(eid, callback);
     Event.Unreg<T1, T2, T3>(eid, callback);
-    ```
 
-    ```csharp
     // 触发事件
     Event.Notify(eid, manager, args);
     ```
+
+事件标记示例：
+
+    ```csharp
+    // 定义模块
+    public class MyModule : XModule.Base<MyModule> { }
+
+    // 定义事件
+    public enum MyEvent
+    {
+        Event1,
+        Event2,
+        Event3,
+    }
+
+    // 事件标记
+    public class MyView : XView.Base<MyModule> {
+        // 模块事件注册（指定模块类型）
+        [XModule.Event(MyEvent.Event1, typeof(MyModule))]
+        private void OnEvent1() { }
+
+        // 模块事件注册（单次触发）
+        [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
+        private void OnEvent2(params object[] args) { }
+
+        // 模块事件注册（当前视图关联的模块）
+        [XModule.Event(MyEvent.Event3)]
+        private void OnEvent3() { }
+    }
+    ```
+
+事件标记说明：
+- 事件标记会在视图 `OnEnable` 时自动注册，在视图 `OnDisable` 时自动注销
+- 若未指定模块类型，则使用当前视图关联的模块
+
+4. 视图特性
+    ```csharp
+    // 类特性标记
+    [XView.Element("类特性名称")]
+    [XView.Element("类特性名称带参数", "参数值")]
+    public class MyView : XView.Base
+    {
+        // 字段特性标记
+        [XView.Element("字段特性名称")]
+        private Button button;
+
+        // 字段特性标记带参数
+        [XView.Element("字段特性名称带参数", "参数值")]
+        private Text text;
+
+        // 方法特性标记
+        [XView.Element("方法特性名称")]
+        private void OnButtonClick() { }
+
+        // 方法特性标记带参数
+        [XView.Element("方法特性名称带参数", "参数值")]
+        private void OnTextChanged() { }
+    }
+    ```
+
+视图特性说明：
+- 可用于标记视图元素的元数据，实现视图绑定和事件绑定
+- 子类会继承父类的所有特性标记，可应用于类、字段和方法
+- 视图特性会在视图 `Awake` 时回调 `Handler.SetBinding` 方法
+- 特性标记只维护视图的元数据，需要业务层自行处理视图的绑定行为
 
 ### 2. 视图管理
 
@@ -73,6 +138,11 @@ XView 提供了业务开发的基础视图，通过业务处理器（Handler）�
 
         public bool Loading(XView.IMeta meta) { 
             // 是否正在加载视图
+        }
+
+        public void SetBinding(GameObject go, object target, XView.Element[] elements)
+        {
+            // 实现视图绑定逻辑
         }
 
         public void SetOrder(XView.IBase view, int order)
