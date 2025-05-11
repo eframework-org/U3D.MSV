@@ -29,8 +29,7 @@ public class TestXView
         public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
         {
             panel = new GameObject(meta.Path);
-            if (parent != null)
-                panel.transform.SetParent(parent, false);
+            if (parent) panel.transform.SetParent(parent, false);
 
             var myView = panel.AddComponent<MyView>();
             myView.Meta = meta;
@@ -44,17 +43,12 @@ public class TestXView
         {
             var panel = new GameObject(meta.Path);
             if (parent) panel.transform.SetParent(parent, false);
-            XLoom.RunAsync(() =>
-            {
-                XLoom.RunInMain(() =>
-                {
-                    var mockView = panel.AddComponent<MyView>();
-                    mockView.Meta = meta;
-                    mockView.Panel = panel;
-                    viewOrder.Add(mockView);
-                    callback?.Invoke(mockView, panel);
-                });
-            });
+
+            var mockView = panel.AddComponent<MyView>();
+            mockView.Meta = meta;
+            mockView.Panel = panel;
+            viewOrder.Add(mockView);
+            callback?.Invoke(mockView, panel);
         }
 
         public bool Loading(XView.IMeta meta) { return false; }
