@@ -62,6 +62,53 @@ XModule 提供了业务开发的基础模块，支持模块的生命周期管理
     module.Event.Notify(eid, args);
     ```
 
+3. 事件特性
+    ```csharp
+    // 定义模块
+    public class MyModule : XModule.Base<MyModule> { }
+
+    // 定义事件
+    public enum MyEvent
+    {
+        Event1,
+        Event2,
+        Event3,
+    }
+
+    // 标记事件
+    public class MyListener {
+        // 在类中使用事件特性标记方法
+        [XModule.Event(MyEvent.Event1, typeof(MyModule), false)]
+        public void OnEvent1() { }
+
+        // 支持单次回调的事件（通知一次后自动注销）
+        [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
+        public void OnEvent2(params object[] args) { }
+
+        // 支持无模块绑定的事件
+        [XModule.Event(MyEvent.Event3, null, false)]
+        public void OnEvent3(int param1, bool param2) { }
+
+        // 支持静态方法
+        [XModule.Event(MyEvent.Event3, typeof(MyModule), true)]
+        public static void OnEvent3Static() { }
+    }
+
+    // 获取类型中标记的所有事件特性
+    var events = XModule.Event.Get(typeof(MyListener));
+
+    // TODO: 根据标记的事件特性注册事件
+    ```
+
+事件特性支持以下功能：
+  - 自动获取指定模块的单例
+  - 支持单次触发模式（Once=true）
+  - 支持多种方法签名（无参、有参、返回值）
+  - 支持实例方法和静态方法
+  - 支持继承类中的事件特性
+
+注意：事件特性标记只维护事件的元数据，需要业务层自行控制注册/注销事件的行为。
+
 ## 常见问题
 
 更多问题，请查阅[问题反馈](../CONTRIBUTING.md#问题反馈)。

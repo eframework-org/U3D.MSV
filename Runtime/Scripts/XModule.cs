@@ -63,6 +63,43 @@ namespace EFramework.Modulize
     /// 
     ///     // 触发事件
     ///     module.Event.Notify(eid, args);
+    /// 
+    /// 2.3 事件特性
+    /// 
+    ///     // 定义模块
+    ///     public class MyModule : XModule.Base&lt;MyModule&gt; { }
+    /// 
+    ///     // 定义事件
+    ///     public enum MyEvent
+    ///     {
+    ///         Event1,
+    ///         Event2,
+    ///         Event3,
+    ///     }
+    /// 
+    ///     // 标记事件
+    ///     public class MyListener {
+    ///         // 在类中使用事件特性标记方法
+    ///         [XModule.Event(MyEvent.Event1, typeof(MyModule), false)]
+    ///         public void OnEvent1() { }
+    /// 
+    ///         // 支持单次回调的事件（通知一次后自动注销）
+    ///         [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
+    ///         public void OnEvent2(params object[] args) { }
+    /// 
+    ///         // 支持无模块绑定的事件
+    ///         [XModule.Event(MyEvent.Event3, null, false)]
+    ///         public void OnEvent3(int param1, bool param2) { }
+    /// 
+    ///         // 支持静态方法
+    ///         [XModule.Event(MyEvent.Event3, typeof(MyModule), true)]
+    ///         public static void OnEvent3Static() { }
+    ///     }
+    /// 
+    ///     // 获取类型中标记的所有事件特性
+    ///     var events = XModule.Event.Get(typeof(MyListener));
+    /// 
+    ///     // TODO: 根据标记的事件特性注册事件
     /// </code>
     /// 更多信息请参考模块文档。
     /// </remarks>
