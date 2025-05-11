@@ -95,6 +95,11 @@ namespace EFramework.Modulize
     ///         public bool Loading(XView.IMeta meta) { 
     ///             // 是否正在加载视图
     ///         }
+    ///
+    ///         public void SetBinding(GameObject go, object target, IReadOnlyList<Element> elements)
+    ///         {
+    ///             // 实现视图绑定逻辑
+    ///         }
     /// 
     ///         public void SetOrder(XView.IBase view, int order)
     ///         {
@@ -104,11 +109,6 @@ namespace EFramework.Modulize
     ///         public void SetFocus(XView.IBase view, bool focus)
     ///         {
     ///             // 实现焦点设置逻辑
-    ///         }
-    ///
-    ///         public void Bind(MonoBehaviour target, XView.BindMeta meta)
-    ///         {
-    ///             //  实现UI绑定逻辑
     ///         }
     ///     }
     /// 
@@ -303,6 +303,14 @@ namespace EFramework.Modulize
             bool Loading(IMeta meta);
 
             /// <summary>
+            /// 设置视图的元素绑定。
+            /// </summary>
+            /// <param name="go">游戏对象</param>
+            /// <param name="target">组件实例</param>
+            /// <param name="elements">元素列表</param>
+            void SetBinding(GameObject go, object target, Element[] elements);
+
+            /// <summary>
             /// 设置视图的渲染顺序。
             /// </summary>
             /// <param name="view">视图实例</param>
@@ -315,19 +323,17 @@ namespace EFramework.Modulize
             /// <param name="view">视图实例</param>
             /// <param name="focus">是否获得焦点</param>
             void SetFocus(IBase view, bool focus);
-
-            void Bind(MonoBehaviour target, BindMeta meta);
         }
 
         /// <summary>
         /// 提供了视图的事件系统实现，支持事件注册、注销和通知。
         /// </summary>
-        public class Event : XEvent.Manager
+        public class Event
         {
             /// <summary>
             /// 事件代理类，用于管理事件回调的上下文。
             /// </summary>
-            protected class EvtProxy
+            internal class Proxy
             {
                 public int ID;
 
@@ -339,23 +345,23 @@ namespace EFramework.Modulize
             /// <summary>
             /// 事件上下文。
             /// </summary>
-            protected readonly XEvent.Manager context;
+            internal readonly XEvent.Manager context;
 
             /// <summary>
             /// 事件代理容器。
             /// </summary>
-            protected readonly Dictionary<int, List<EvtProxy>> proxies = new();
+            internal readonly Dictionary<int, List<Proxy>> proxies = new();
 
-            public Event(XEvent.Manager context = null) { this.context = context ?? this; }
+            public Event(XEvent.Manager context = null) { this.context = context ?? new XEvent.Manager(); }
 
             /// <summary>
-            /// 注册事件回调。
+            /// 注册事件。
             /// </summary>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
             /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
             public virtual bool Reg(int eid, XEvent.Callback callback, XEvent.Manager manager = null, bool once = false)
             {
                 if (callback == null) return false;
@@ -366,11 +372,11 @@ namespace EFramework.Modulize
                 {
                     if (!proxies.TryGetValue(eid, out var list))
                     {
-                        list = new List<EvtProxy>();
+                        list = new List<Proxy>();
                         proxies.Add(eid, list);
                     }
 
-                    var proxy = new EvtProxy { ID = callback.GetHashCode(), Context = manager, Callback = callback };
+                    var proxy = new Proxy { ID = callback.GetHashCode(), Context = manager, Callback = callback };
                     list.Add(proxy);
                 }
 
@@ -378,14 +384,42 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注册带一个参数的事件回调。
+            /// 注册事件。
             /// </summary>
-            /// <typeparam name="T1">参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg(int eid, XEvent.Callback callback, bool once = false) { return Reg(eid, callback, null, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
             /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg(Enum eid, XEvent.Callback callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg(Enum eid, XEvent.Callback callback, bool once = false) { return Reg(eid, callback, null, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="manager">事件管理器</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
             public virtual bool Reg<T1>(int eid, Action<T1> callback, XEvent.Manager manager = null, bool once = false)
             {
                 if (callback == null) return false;
@@ -397,33 +431,63 @@ namespace EFramework.Modulize
                     callback?.Invoke(arg1);
                 });
 
-                return Reg(eid, ncallback, manager, once);
+                var ret = manager.Reg(eid, ncallback, once);
+                if (ret)
+                {
+                    if (!proxies.TryGetValue(eid, out var list))
+                    {
+                        list = new List<Proxy>();
+                        proxies.Add(eid, list);
+                    }
+
+                    var proxy = new Proxy { ID = callback.GetHashCode(), Context = manager, Callback = ncallback };
+                    list.Add(proxy);
+                }
+
+                return ret;
             }
 
             /// <summary>
-            /// 注册带一个参数的事件回调。
+            /// 注册事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
-            public virtual bool Reg<T1>(Enum eid, Action<T1> callback, XEvent.Manager manager = null, bool once = false)
-            {
-                return Reg(eid.GetHashCode(), callback, manager, once);
-            }
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1>(int eid, Action<T1> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册带两个参数的事件回调。
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="manager">事件管理器</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1>(Enum eid, Action<T1> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1>(Enum eid, Action<T1> callback, bool once = false) { return Reg(eid, callback, null, once); }
+
+            /// <summary>
+            /// 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
             /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
             public virtual bool Reg<T1, T2>(int eid, Action<T1, T2> callback, XEvent.Manager manager = null, bool once = false)
             {
                 if (callback == null) return false;
@@ -436,35 +500,67 @@ namespace EFramework.Modulize
                     callback?.Invoke(arg1, arg2);
                 });
 
-                return Reg(eid, ncallback, manager, once);
+                var ret = manager.Reg(eid, ncallback, once);
+                if (ret)
+                {
+                    if (!proxies.TryGetValue(eid, out var list))
+                    {
+                        list = new List<Proxy>();
+                        proxies.Add(eid, list);
+                    }
+
+                    var proxy = new Proxy { ID = callback.GetHashCode(), Context = manager, Callback = ncallback };
+                    list.Add(proxy);
+                }
+
+                return ret;
             }
 
             /// <summary>
-            /// 注册带两个参数的事件回调。
+            /// 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
-            public virtual bool Reg<T1, T2>(Enum eid, Action<T1, T2> callback, XEvent.Manager manager = null, bool once = false)
-            {
-                return Reg(eid.GetHashCode(), callback, manager, once);
-            }
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2>(int eid, Action<T1, T2> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册带三个参数的事件回调。
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">第一个参数类型</typeparam>
+            /// <typeparam name="T2">第二个参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="manager">事件管理器</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2>(Enum eid, Action<T1, T2> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">第一个参数类型</typeparam>
+            /// <typeparam name="T2">第二个参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="manager">事件管理器</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2>(Enum eid, Action<T1, T2> callback, bool once = false) { return Reg(eid, callback, null, once); }
+
+            /// <summary>
+            /// 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
             /// <typeparam name="T3">第三个参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
             /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
             public virtual bool Reg<T1, T2, T3>(int eid, Action<T1, T2, T3> callback, XEvent.Manager manager = null, bool once = false)
             {
                 if (callback == null) return false;
@@ -478,35 +574,68 @@ namespace EFramework.Modulize
                     callback?.Invoke(arg1, arg2, arg3);
                 });
 
-                return Reg(eid, ncallback, manager, once);
+                var ret = manager.Reg(eid, ncallback, once);
+                if (ret)
+                {
+                    if (!proxies.TryGetValue(eid, out var list))
+                    {
+                        list = new List<Proxy>();
+                        proxies.Add(eid, list);
+                    }
+
+                    var proxy = new Proxy { ID = callback.GetHashCode(), Context = manager, Callback = ncallback };
+                    list.Add(proxy);
+                }
+
+                return ret;
             }
 
             /// <summary>
-            /// 注册带三个参数的事件回调。
+            /// 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
             /// <typeparam name="T3">第三个参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <param name="manager">事件管理器</param>
-            /// <param name="once">是否只触发一次</param>
-            /// <returns>是否注册成功</returns>
-            public virtual bool Reg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback, XEvent.Manager manager = null, bool once = false)
-            {
-                return Reg(eid.GetHashCode(), callback, manager, once);
-            }
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2, T3>(int eid, Action<T1, T2, T3> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注销事件回调。
+            /// 注册事件。
             /// </summary>
-            /// <param name="eid">事件ID</param>
+            /// <typeparam name="T1">第一个参数类型</typeparam>
+            /// <typeparam name="T2">第二个参数类型</typeparam>
+            /// <typeparam name="T3">第三个参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg(int eid, XEvent.Callback callback = null)
+            /// <param name="manager">事件管理器</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
+
+            /// <summary>
+            /// 注册事件。
+            /// </summary>
+            /// <typeparam name="T1">第一个参数类型</typeparam>
+            /// <typeparam name="T2">第二个参数类型</typeparam>
+            /// <typeparam name="T3">第三个参数类型</typeparam>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <param name="once">回调一次</param>
+            /// <returns>是否成功</returns>
+            public virtual bool Reg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback, bool once = false) { return Reg(eid, callback, null, once); }
+
+            /// <summary>
+            /// 注销事件。
+            /// </summary>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <returns>是否成功</returns> 
+            public virtual bool Unreg(int eid, XEvent.Callback callback = null)
             {
-                var ret = true;
-                base.Unreg(eid, callback);
+                var ret = false;
                 if (proxies.TryGetValue(eid, out var list))
                 {
                     if (callback != null)
@@ -517,7 +646,7 @@ namespace EFramework.Modulize
                             var proxy = list[i];
                             if (proxy.ID == hashCode)
                             {
-                                ret &= proxy.Context.Unreg(eid, proxy.Callback);
+                                ret |= proxy.Context.Unreg(eid, proxy.Callback);
                                 list.RemoveAt(i);
                             }
                         }
@@ -526,7 +655,7 @@ namespace EFramework.Modulize
                     {
                         foreach (var proxy in list)
                         {
-                            ret &= proxy.Context.Unreg(eid, proxy.Callback);
+                            ret |= proxy.Context.Unreg(eid, proxy.Callback);
                         }
 
                         proxies.Remove(eid);
@@ -537,13 +666,21 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销带一个参数的事件回调。
+            /// 注销事件。
+            /// </summary>
+            /// <param name="eid">事件标识</param>
+            /// <param name="callback">事件回调</param>
+            /// <returns>是否成功</returns> 
+            public virtual bool Unreg(Enum eid, XEvent.Callback callback = null) { return Unreg(eid.GetHashCode(), callback); }
+
+            /// <summary>
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1>(int eid, Action<T1> callback)
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1>(int eid, Action<T1> callback)
             {
                 if (callback == null) return false;
 
@@ -566,26 +703,23 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销带一个参数的事件回调。
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1>(Enum eid, Action<T1> callback)
-            {
-                return Unreg(eid.GetHashCode(), callback);
-            }
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1>(Enum eid, Action<T1> callback) { return Unreg(eid.GetHashCode(), callback); }
 
             /// <summary>
-            /// 注销带两个参数的事件回调。
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1, T2>(int eid, Action<T1, T2> callback)
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1, T2>(int eid, Action<T1, T2> callback)
             {
                 if (callback == null) return false;
 
@@ -608,28 +742,28 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销带两个参数的事件回调。
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1, T2>(Enum eid, Action<T1, T2> callback)
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1, T2>(Enum eid, Action<T1, T2> callback)
             {
                 return Unreg(eid.GetHashCode(), callback);
             }
 
             /// <summary>
-            /// 注销带三个参数的事件回调。
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
             /// <typeparam name="T3">第三个参数类型</typeparam>
-            /// <param name="eid">事件ID</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1, T2, T3>(int eid, Action<T1, T2, T3> callback)
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1, T2, T3>(int eid, Action<T1, T2, T3> callback)
             {
                 if (callback == null) return false;
 
@@ -652,23 +786,20 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销带三个参数的事件回调。
+            /// 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
             /// <typeparam name="T3">第三个参数类型</typeparam>
-            /// <param name="eid">事件枚举</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
-            /// <returns>是否注销成功</returns>
-            public override bool Unreg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback)
-            {
-                return Unreg(eid.GetHashCode(), callback);
-            }
+            /// <returns>是否成功</returns>
+            public virtual bool Unreg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback) { return Unreg(eid.GetHashCode(), callback); }
 
             /// <summary>
-            /// 清理所有事件回调。
+            /// 清除事件注册。
             /// </summary>
-            public override void Clear()
+            public virtual void Clear()
             {
                 foreach (var kvp in proxies)
                 {
@@ -677,34 +808,22 @@ namespace EFramework.Modulize
                         proxy.Context.Unreg(kvp.Key, proxy.Callback);
                     }
                 }
-
                 proxies.Clear();
-                base.Clear();
             }
 
             /// <summary>
             /// 通知事件。
             /// </summary>
-            /// <param name="eid">事件枚举</param>
-            /// <param name="manager">事件管理器</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="args">事件参数</param>
-            public virtual void Notify(Enum eid, XEvent.Manager manager = null, params object[] args)
-            {
-                manager ??= context;
-                manager.Notify(eid.GetHashCode(), args);
-            }
+            public virtual void Notify(int eid, params object[] args) { context.Notify(eid, args); }
 
             /// <summary>
             /// 通知事件。
             /// </summary>
-            /// <param name="eid">事件ID</param>
-            /// <param name="manager">事件管理器</param>
+            /// <param name="eid">事件标识</param>
             /// <param name="args">事件参数</param>
-            public virtual void Notify(int eid, XEvent.Manager manager = null, params object[] args)
-            {
-                manager ??= context;
-                manager.Notify(eid, args);
-            }
+            public virtual void Notify(Enum eid, XEvent.Manager manager = null, params object[] args) { Notify(eid.GetHashCode(), args); }
         }
 
         /// <summary>
@@ -744,127 +863,86 @@ namespace EFramework.Modulize
             /// <param name="done">关闭完成回调</param>
             void OnClose(Action done);
         }
-        
-        public interface IBind
-        {
-            /// <summary>
-            /// 绑定的Target
-            /// </summary>
-            MonoBehaviour Target { get; set; }
-
-            /// <summary>
-            /// 预设的Root，可通过这个根据路径搜索到对应的UI
-            /// </summary>
-            object Root { get; set; }
-
-            /// <summary>
-            /// 用于存储当前绑定的事件，便于扩展
-            /// </summary>
-            Dictionary<Type, Action<object, object, MethodInfo>> Events { get; set; }
-
-            /// <summary>
-            /// 绑定
-            /// </summary>
-            void Bind(XView.BindMeta meta);
-        }
-        
-        /// <summary>
-        /// 定义了属性标记UI元件的字段
-        /// </summary>
-        /// <remarks>
-        /// 使用此特性可以为元件定义参数，支持：
-        /// - 参数路径名称和方法名
-        /// - 自动绑定UI
-        /// - 自动绑定Event
-        /// </remarks>
-        [AttributeUsage(AttributeTargets.Field)]
-        public class Element : Attribute
-        {
-            /// <summary>
-            /// 路径名称
-            /// </summary>
-            public string Name { get; }
-
-            /// <summary>
-            /// 附加参数，用于扩展功能
-            /// </summary>
-            public string Extras { get; }
-
-            public Element(string name, string extras = null)
-            {
-                this.Name = name;
-                this.Extras = extras;
-            }
-        }
 
         /// <summary>
-        /// 定义了绑定的元数据
+        /// 视图元素特性，支持自定义描述。
         /// </summary>
-        public struct BindMeta
+        [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+        public sealed class Element : Attribute
         {
             /// <summary>
-            /// 实例字段
+            /// 元素名称。
             /// </summary>
-            public FieldInfo Field { get; set; }
+            public string Name { get; internal set; }
 
             /// <summary>
-            /// 元件名称路径
+            /// 自定义描述。
             /// </summary>
-            public string Name { get; set; }
+            public string Extras { get; internal set; }
 
             /// <summary>
-            /// 实例方法
+            /// 反射信息。
             /// </summary>
-            public MethodInfo Method { get; set; }
+            public object Reflect { get; internal set; }
 
-            public BindMeta(FieldInfo field, string name, MethodInfo method)
+            public Element(string name = null, string extras = null, object reflect = null)
             {
-                Field = field;
                 Name = name;
-                Method = method;
+                Extras = extras;
+                Reflect = reflect;
             }
-        }
 
-        /// <summary>
-        /// 缓存全局绑定元数据的容器
-        /// </summary>
-        internal static readonly Dictionary<Type, List<BindMeta>> BindMetas = new();
+            /// <summary>
+            /// 视图元素特性的全局缓存。
+            /// </summary>
+            internal static readonly Dictionary<Type, Element[]> cached = new();
 
-        /// <summary>
-        /// 事件元数据
-        /// </summary>
-        public class EventMeta
-        {
             /// <summary>
-            /// 事件ID
+            /// 根据类型获取视图元素标记的特性。
             /// </summary>
-            public int ID;
-            /// <summary>
-            /// 注册模块
-            /// </summary>
-            public XModule.Base Module;
-            /// <summary>
-            /// 事件方法
-            /// </summary>
-            public MethodInfo Method;
-            /// <summary>
-            /// 一次性
-            /// </summary>
-            public bool Once;
-
-            public EventMeta(int id, XModule.Base module, MethodInfo method, bool once)
+            /// <param name="type">目标类型</param>
+            /// <returns>标记的特性列表</returns>
+            public static Element[] Get(Type type)
             {
-                this.ID = id;
-                this.Module = module;
-                this.Method = method;
-                this.Once = once;
+                if (type == null) return null;
+
+                if (!cached.TryGetValue(type, out var elements))
+                {
+                    var telements = new List<Element>();
+
+                    var classAttrs = type.GetCustomAttributes<Element>();
+                    foreach (var attr in classAttrs)
+                    {
+                        attr.Reflect = type;
+                        telements.Add(attr);
+                    }
+
+                    var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var member in members)
+                    {
+                        var memberAttrs = member.GetCustomAttributes<Element>();
+                        foreach (var attr in memberAttrs)
+                        {
+                            attr.Reflect = member;
+                            telements.Add(attr);
+                        }
+                    }
+
+                    foreach (var element in telements)
+                    {
+                        if (string.IsNullOrEmpty(element.Name) && element.Reflect != null)
+                        {
+                            element.Name = (element.Reflect as MemberInfo).Name;
+                        }
+                    }
+
+                    elements = telements.ToArray();
+                    cached.Add(type, elements);
+                }
+
+                return elements;
             }
         }
-
-        /// <summary>
-        /// 缓存全局事件元数据的容器
-        /// </summary>
-        internal static readonly Dictionary<Type, List<EventMeta>> EventMetas = new();
     }
 
     public partial class XView
@@ -884,12 +962,12 @@ namespace EFramework.Modulize
             /// </summary>
             public virtual GameObject Panel { get; set; }
 
-            internal XEvent.Manager @event;
+            internal Event @event;
 
             /// <summary>
             /// 获取视图的事件管理器。
             /// </summary>
-            public virtual XEvent.Manager Event
+            public virtual Event Event
             {
                 get
                 {
@@ -914,7 +992,6 @@ namespace EFramework.Modulize
                         tags.Set("Comp", GetType().FullName);
                         tags.Set("Hash", GetHashCode().ToString());
                     }
-
                     return tags;
                 }
                 set => tags = value;
@@ -936,63 +1013,8 @@ namespace EFramework.Modulize
             /// </summary>
             public virtual void Awake()
             {
-                var type = this.GetType();
-                if (BindMetas.TryGetValue(type, out var bMetas))
-                {
-                    foreach (var meta in bMetas)
-                    {
-                        sharedHandler.Bind(this, meta);
-                    }
-                }
-                else
-                {
-                    BindMetas[type] = new List<BindMeta>();
-                    var fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-                    foreach (var field in fields)
-                    {
-                        if (Attribute.GetCustomAttribute(field, typeof(Element)) is Element element)
-                        {
-                            MethodInfo method = null;
-                            if (!string.IsNullOrEmpty(element.Extras))
-                            {
-                                method = type.GetMethod(element.Extras, BindingFlags.Instance | BindingFlags.NonPublic);
-                                if (method == null)
-                                {
-                                    XLog.Error("XView.Binder: Unable to find the method {0} on type {1}.", element.Extras, type);
-                                    return;
-                                }
-                            }
-
-                            var meta = new BindMeta(field, element.Name, method);
-                            sharedHandler.Bind(this, meta);
-                            BindMetas[type].Add(meta);
-                        }
-                    }
-                }
-
-                if (!EventMetas.ContainsKey(type))
-                {
-                    EventMetas.Add(type, new List<EventMeta>());
-                    var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
-                    foreach (var method in methods)
-                    {
-                        if (Attribute.GetCustomAttribute(method, typeof(XModule.Event)) is XModule.Event evt)
-                        {
-                            if (evt.Module != null)
-                            {
-                                var insInfo = evt.Module.GetProperty("Instance", BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Static);
-                                if (insInfo == null)
-                                {
-                                    XLog.Error("XView.Binder: Unable to find the module instance {0}.", evt.Module);
-                                    return;
-                                }
-
-                                var module = insInfo.GetValue(null) as XModule.Base;
-                                EventMetas[type].Add(new EventMeta((int)evt.ID, module, method, evt.Once));
-                            }
-                        }
-                    }
-                }
+                var elements = Element.Get(GetType());
+                Handler.SetBinding(gameObject, this, elements);
             }
 
             /// <summary>
@@ -1000,12 +1022,27 @@ namespace EFramework.Modulize
             /// </summary>
             public virtual void OnEnable()
             {
-                var type = this.GetType();
-                if (EventMetas.TryGetValue(type, out var eMetas))
+                var events = XModule.Event.Get(GetType());
+                if (events != null && events.Count > 0)
                 {
-                    foreach (var meta in eMetas)
+                    foreach (var @event in events)
                     {
-                        ((Event)this.Event).Reg(meta.ID, args => meta.Method.Invoke(this, args), meta.Module.Event, meta.Once);
+                        if (@event.Target != null)
+                        {
+                            Event.Reg(@event.ID, args =>
+                            {
+                                if (@event.Callback.IsStatic) @event.Callback.Invoke(null, new object[] { args });
+                                else @event.Callback.Invoke(this, new object[] { args });
+                            }, @event.Target.Event, @event.Once);
+                        }
+                        else
+                        {
+                            Event.Reg(@event.ID, args =>
+                            {
+                                if (@event.Callback.IsStatic) @event.Callback.Invoke(null, new object[] { args });
+                                else @event.Callback.Invoke(this, new object[] { args });
+                            }, @event.Once);
+                        }
                     }
                 }
             }
@@ -1063,7 +1100,7 @@ namespace EFramework.Modulize
             /// <summary>
             /// 获取视图的事件管理器。
             /// </summary>
-            public override XEvent.Manager Event
+            public override Event Event
             {
                 get
                 {
@@ -1104,7 +1141,7 @@ namespace EFramework.Modulize
         /// <summary>
         /// 共享的视图加载处理器。
         /// </summary>
-        internal static IHandler sharedHandler;
+        public static IHandler Handler { get; internal set; }
 
         /// <summary>
         /// 缓存的视图列表。
@@ -1127,7 +1164,7 @@ namespace EFramework.Modulize
         /// <param name="handler">视图加载处理器</param>
         public static void Initialize(IHandler handler)
         {
-            sharedHandler = handler ?? throw new ArgumentNullException("handler");
+            Handler = handler ?? throw new ArgumentNullException("handler");
             SceneManager.sceneUnloaded += scene =>
             {
                 if (!scene.isSubScene)
@@ -1184,12 +1221,12 @@ namespace EFramework.Modulize
 
             if (view == null)
             {
-                sharedHandler.Load(meta, parent, out view, out var panel);
+                Handler.Load(meta, parent, out view, out var panel);
                 if (view != null)
                 {
                     view.Meta = meta;
                     view.Panel = panel;
-                    sharedHandler.SetFocus(view, true);
+                    Handler.SetFocus(view, true);
                 }
             }
 
@@ -1319,7 +1356,7 @@ namespace EFramework.Modulize
 
             if (view == null)
             {
-                if (!target.Multiple && sharedHandler.Loading(target))
+                if (!target.Multiple && Handler.Loading(target))
                 {
                     try { callback?.Invoke(null); }
                     catch (Exception e) { XLog.Panic(e); }
@@ -1328,13 +1365,13 @@ namespace EFramework.Modulize
                 }
                 else
                 {
-                    sharedHandler.LoadAsync(target, parent, (view, panel) =>
+                    Handler.LoadAsync(target, parent, (view, panel) =>
                     {
                         if (view != null)
                         {
                             view.Meta = target;
                             view.Panel = panel;
-                            sharedHandler.SetFocus(view, true);
+                            Handler.SetFocus(view, true);
 
                             panel.SetActiveState(true);
                             var belowWin = Find(below);
@@ -1424,11 +1461,11 @@ namespace EFramework.Modulize
                     focusedView.TryGetValue(temp, out var focused);
                     if (temp.Meta.FixedRQ > 0)
                     {
-                        sharedHandler.SetOrder(temp, temp.Meta.FixedRQ);
+                        Handler.SetOrder(temp, temp.Meta.FixedRQ);
                     }
                     else
                     {
-                        sharedHandler.SetOrder(temp, 1000 + (rqIndex - 1) * 500);
+                        Handler.SetOrder(temp, 1000 + (rqIndex - 1) * 500);
                         rqIndex -= 1;
                     }
 
@@ -1437,7 +1474,7 @@ namespace EFramework.Modulize
                         if (focused)
                         {
                             focusedView[temp] = false;
-                            sharedHandler.SetFocus(temp, false);
+                            Handler.SetFocus(temp, false);
                             temp.OnBlur();
                         }
                     }
@@ -1446,7 +1483,7 @@ namespace EFramework.Modulize
                         if (!focused)
                         {
                             focusedView[temp] = true;
-                            sharedHandler.SetFocus(temp, true);
+                            Handler.SetFocus(temp, true);
                             temp.OnFocus();
                         }
 
@@ -1457,7 +1494,7 @@ namespace EFramework.Modulize
                         if (focused)
                         {
                             focusedView[temp] = false;
-                            sharedHandler.SetFocus(temp, false);
+                            Handler.SetFocus(temp, false);
                             temp.OnBlur();
                         }
                     }
@@ -1480,7 +1517,7 @@ namespace EFramework.Modulize
                     var temp = openedView[i];
                     if (temp.Meta.Path == meta.Path)
                     {
-                        sharedHandler.SetFocus(temp, true);
+                        Handler.SetFocus(temp, true);
                         temp.OnFocus();
                         break;
                     }
@@ -1501,7 +1538,7 @@ namespace EFramework.Modulize
                     var temp = openedView[i];
                     if (temp == view)
                     {
-                        sharedHandler.SetFocus(temp, true);
+                        Handler.SetFocus(temp, true);
                         temp.OnFocus();
                         break;
                     }

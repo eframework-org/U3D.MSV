@@ -8,12 +8,12 @@ const XLog = CS.EFramework.Utility.XLog
 const XEvent = CS.EFramework.Utility.XEvent
 
 //#region XModule
-const XModuleEvent = "__xmodule_event"
-const XObjectThis = "__xobject_this"
+const XModuleEventTag = "__xmodule_event"
+const XObjectThisTag = "__xobject_this"
 
 class XModuleBase {
     constructor() {
-        const othis = this.constructor.prototype[XObjectThis]
+        const othis = this.constructor.prototype[XObjectThisTag]
         if (othis) {
             for (let i = 0; i < othis.length; i++) {
                 let key = othis[i]
@@ -60,7 +60,7 @@ class XModuleBase {
     }
 
     Start(...args) {
-        const evts = this.constructor.prototype[XModuleEvent]
+        const evts = this.constructor.prototype[XModuleEventTag]
         if (evts) {
             for (let field in evts) {
                 let meta = evts[field]
@@ -121,8 +121,8 @@ CS.EFramework.Modulize.XModule.Base$1 = XModuleBase
 
 CS.EFramework.Modulize.XModule.Event = function (eid, module, once = false) {
     return function (target, propertyKey) {
-        target[XModuleEvent] = target[XModuleEvent] || {}
-        target[XModuleEvent][propertyKey] = { eid: eid, module: module, once: once }
+        target[XModuleEventTag] = target[XModuleEventTag] || {}
+        target[XModuleEventTag][propertyKey] = { eid: eid, module: module, once: once }
     }
 }
 //#endregion
@@ -130,14 +130,15 @@ CS.EFramework.Modulize.XModule.Event = function (eid, module, once = false) {
 //#region XScene
 class XSceneBase extends XModuleBase { }
 
-CS.EFramework.Modulize.XScene.Base = XModuleBase
-CS.EFramework.Modulize.XScene.Base$1 = XModuleBase
+CS.EFramework.Modulize.XScene.Base = XSceneBase
+CS.EFramework.Modulize.XScene.Base$1 = XSceneBase
 //#endregion
 
 //#region XView
 const XView = CS.EFramework.Modulize.XView
-const XViewElement = "__xview_element"
-const XViewModule = "__xview_module"
+const XViewElement = CS.EFramework.Modulize.XView.Element
+const XViewElementTag = "__xview_element"
+const XViewModuleTag = "__xview_module"
 
 class XViewEvent extends XEvent.Manager {
     constructor(context = null) {
@@ -166,7 +167,7 @@ class XViewEvent extends XEvent.Manager {
     }
 
     Unreg(eid, callback = null) {
-        let ret = true
+        let ret = false
         const list = this.proxies.get(eid)
         if (list) {
             if (callback) {
@@ -174,13 +175,13 @@ class XViewEvent extends XEvent.Manager {
                 for (let i = list.length - 1; i >= 0; i--) {
                     const proxy = list[i]
                     if (proxy.ID === hashCode) {
-                        ret &= proxy.Context.Unreg(eid, proxy.Callback)
+                        ret |= proxy.Context.Unreg(eid, proxy.Callback)
                         list.splice(i, 1)
                     }
                 }
             } else {
                 for (const proxy of list) {
-                    ret &= proxy.Context.Unreg(eid, proxy.Callback)
+                    ret |= proxy.Context.Unreg(eid, proxy.Callback)
                 }
                 this.proxies.delete(eid)
             }
@@ -188,14 +189,7 @@ class XViewEvent extends XEvent.Manager {
         return ret
     }
 
-    Notify(eid, ...managerOrArgs) {
-        if (managerOrArgs.length > 0 && managerOrArgs[0] instanceof XEvent.Manager) {
-            const args = managerOrArgs.slice(1)
-            managerOrArgs[0].Notify(eid, ...args)
-        } else {
-            this.context.Notify(eid, ...managerOrArgs)
-        }
-    }
+    Notify(eid, ...args) { this.context.Notify(eid, ...args) }
 
     Clear() {
         if (this.proxies) {
@@ -213,7 +207,7 @@ class XViewEvent extends XEvent.Manager {
 class XViewBase extends CS.UnityEngine.MonoBehaviour {
     constructor(proxy) {
         super(proxy)
-        const othis = this.constructor.prototype[XObjectThis]
+        const othis = this.constructor.prototype[XObjectThisTag]
         if (othis) {
             for (let i = 0; i < othis.length; i++) {
                 let key = othis[i]
@@ -232,7 +226,7 @@ class XViewBase extends CS.UnityEngine.MonoBehaviour {
     get Module() {
         if (this.module == null && !this.bModule) {
             this.bModule = true
-            const module = this.constructor[XViewModule]
+            const module = this.constructor[XViewModuleTag]
             if (module) this.module = module.Instance
         }
         return this.module
@@ -267,41 +261,19 @@ class XViewBase extends CS.UnityEngine.MonoBehaviour {
     OnClose(done) { if (done) done.Invoke() }
 
     Awake() {
-        const eles = this.constructor.prototype[XViewElement]
-        if (eles) {
-            for (let field in eles) {
-                let meta = eles[field]
-                let name = meta.name
-                let method = meta.method
-                let ele = this.transform.Index(name)
-                this[field] = ele
-                if (!ele) {
-                    XLog.Error("XView.Element: binding {0} for field: {1} failed because of nil node.", this.Tags, name, field)
-                    continue
-                }
-                if (method) {
-                    let callback = this[method]
-                    if (!callback) {
-                        XLog.Error("XView.Element: binding {0}'s event: {1} for field: {2} failed because of nil callback.", this.Tags, name, method, field)
-                        continue
-                    }
-                    if (typeof (callback) != "function") {
-                        XLog.Error("XView.Element: binding {0}'s event: {1} for field: {2} failed because of non-function callback.", this.Tags, name, method, field)
-                        continue
-                    }
-                    callback = callback.bind(this)
-                    this[method] = callback
-                    let type = ele.GetType().FullName
-                    if (type == "FairyGUI.GButton") ele.onClick.Add(callback)
-                    else if (type == "FairyGUI.GList") ele.itemRenderer = callback
-                    else if (type == "FairyGUI.GRichTextField") ele.onClickLink.Add(callback)
-                    else if (type == "FairyGUI.GComboBox") ele.onChanged.Add(callback)
-                    else XLog.Error("XView.Element: binding {0}'s event: {1} for field: {2} failed because of non-supported type: {3}.", this.Tags, name, method, field, type)
-                }
+        let elements = this.constructor.prototype[XViewElementTag]
+        if (elements && elements.length != null) {
+            // 转换为 CS.System.Array
+            let telements = CS.System.Array.CreateInstance(XObject.TypeOf(XViewElement), elements.length)
+            for (let i = 0; i < elements.length; i++) {
+                telements.SetValue(elements[i], i)
             }
+            this.constructor.prototype[XViewElementTag] = telements
+            elements = telements
         }
+        XView.Handler.SetBinding(this.gameObject, this, elements)
 
-        const evts = this.constructor.prototype[XModuleEvent]
+        const evts = this.constructor.prototype[XModuleEventTag]
         if (evts) {
             const ievts = new Array()
             for (let field in evts) {
@@ -336,16 +308,16 @@ class XViewBase extends CS.UnityEngine.MonoBehaviour {
                 this[field] = callback
                 ievts.push({ eid: eid, module: module, once: once, callback: callback })
             }
-            this[XModuleEvent] = ievts
+            this[XModuleEventTag] = ievts
         }
     }
 
     OnEnable() {
-        const evts = this[XModuleEvent]
+        const evts = this[XModuleEventTag]
         if (evts) {
             for (let i = 0; i < evts.length; i++) {
                 let evt = evts[i]
-                this.Event.Reg(evt.eid, evt.callback, evt.once)
+                this.Event.Reg(evt.eid, evt.callback, evt.module && evt.module.Instance ? evt.module.Instance.Event : null, evt.once)
             }
         }
     }
@@ -365,13 +337,15 @@ CS.EFramework.Modulize.XView.Base = XViewBase
 CS.EFramework.Modulize.XView.Base$1 = XViewBase
 
 CS.EFramework.Modulize.XView.Module = function (type) {
-    return function (target) { target[XViewModule] = type }
+    return function (target) { target[XViewModuleTag] = type }
 }
 
-CS.EFramework.Modulize.XView.Element = function (name, method) {
+CS.EFramework.Modulize.XView.Element = function (name, extras) {
     return function (target, propertyKey) {
-        target[XViewElement] = target[XViewElement] || {}
-        target[XViewElement][propertyKey] = { name: name, method: method }
+        target[XViewElementTag] = target[XViewElementTag] || new Array()
+        if (!name) name = propertyKey
+        const cproxy = new XViewElement(name, extras, propertyKey)
+        target[XViewElementTag].push(cproxy)
     }
 }
 

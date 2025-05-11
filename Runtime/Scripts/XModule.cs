@@ -3,6 +3,8 @@
 // license that can be found in the LICENSE file.
 
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using EFramework.Utility;
 
 namespace EFramework.Modulize
@@ -111,38 +113,6 @@ namespace EFramework.Modulize
             /// 停止模块运行。
             /// </summary>
             void Stop();
-        }
-
-        /// <summary>
-        /// 定义了属性标记事件方法
-        /// </summary>
-        /// <remarks>
-        /// 使用此特性可以为事件定义参数，支持：
-        /// - 参数事件ID、模块类型和是否一次使用
-        /// - 自动对模块注册事件
-        /// </remarks>
-        [AttributeUsage(AttributeTargets.Method)]
-        public class Event : Attribute
-        {
-            /// <summary>
-            /// 事件ID
-            /// </summary>
-            public object ID { get; }
-            /// <summary>
-            /// 模块类型
-            /// </summary>
-            public Type Module { get; }
-            /// <summary>
-            /// 是否一次使用
-            /// </summary>
-            public bool Once { get; }
-
-            public Event(object id, Type module = null, bool once = false)
-            {
-                this.ID = id;
-                this.Module = module;
-                this.Once = once;
-            }
         }
 
         /// <summary>
@@ -259,6 +229,96 @@ namespace EFramework.Modulize
 
                     return instance;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 定义了事件的标记特性，使用此特性可以为事件定义参数。
+        /// </summary>
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+        public sealed class Event : Attribute
+        {
+            /// <summary>
+            /// 事件标识。
+            /// </summary>
+            public int ID { get; internal set; }
+
+            /// <summary>
+            /// 模块类型。
+            /// </summary>
+            public Type Module { get; internal set; }
+
+            /// <summary>
+            /// 单次回调。
+            /// </summary>
+            public bool Once { get; internal set; }
+
+            /// <summary>
+            /// 模块实例。
+            /// </summary>
+            public IBase Target { get; internal set; }
+
+            /// <summary>
+            /// 回调函数。
+            /// </summary>
+            public MethodInfo Callback { get; internal set; }
+
+            public Event(object id, Type module = null, bool once = false)
+            {
+                ID = id == null ? -1 : id.GetHashCode();
+                Module = module;
+                Once = once;
+            }
+
+            /// <summary>
+            /// 视图元素特性的全局缓存。
+            /// </summary>
+            internal static readonly Dictionary<Type, List<Event>> cached = new();
+
+            /// <summary>
+            /// 根据类型获取视图元素标记的特性。
+            /// </summary>
+            /// <param name="type">目标类型</param>
+            /// <returns>标记的特性列表</returns>
+            public static IReadOnlyList<Event> Get(Type type)
+            {
+                if (type == null) return null;
+
+                if (!cached.TryGetValue(type, out var events))
+                {
+                    events = new List<Event>();
+                    var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var method in methods)
+                    {
+                        var attrs = method.GetCustomAttributes<Event>();
+                        foreach (var attr in attrs)
+                        {
+                            if (attr.Module != null)
+                            {
+                                if (!typeof(IBase).IsAssignableFrom(attr.Module))
+                                {
+                                    XLog.Error("XModule.Event: module {0} does not implements {1}.", attr.Module, typeof(IBase));
+                                    continue;
+                                }
+                                else
+                                {
+                                    var prop = attr.Module.GetProperty("Instance", BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                                    if (prop != null) attr.Target = prop.GetValue(null) as IBase;
+                                    if (attr.Target == null)
+                                    {
+                                        XLog.Error("XModule.Event: unable to find instance of module {0}.", attr.Module);
+                                        continue;
+                                    }
+                                }
+                            }
+                            attr.Callback = method;
+                            events.Add(attr);
+                        }
+                    }
+                    cached.Add(type, events);
+                }
+
+                return events;
             }
         }
     }
