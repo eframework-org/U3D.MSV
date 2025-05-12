@@ -15,21 +15,17 @@ namespace EFramework.Modulize
     /// <remarks>
     /// <code>
     /// 功能特性
-    /// - 生命周期管理：提供了 Awake、Start、Reset、Stop 状态控制
-    /// - 事件系统集成：通过事件系统对模块内（间）的业务进行解耦合
+    /// - 生命周期管理：提供 Awake、Start、Reset、Stop 状态控制
+    /// - 事件系统集成：通过事件系统对模块与视图间的交互进行解耦合
     /// 
     /// 使用手册
-    /// 1. 创建模块
-    /// 
-    /// 1.1 基础模块
+    /// 1. 定义模块
     /// 
     ///     // 基础模块
     ///     public class MyModule : XModule.Base
     ///     {
     ///         public override string Name =&gt; "MyModule";
     ///     }
-    /// 
-    /// 1.2 单例模块
     /// 
     ///     // 单例模块
     ///     public class MySingletonModule : XModule.Base&lt;MySingletonModule&gt; 
@@ -41,19 +37,25 @@ namespace EFramework.Modulize
     /// 
     /// 2.1 模块状态
     /// 
+    ///     // 获取模块实例（自动调用 Awake 方法）
+    ///     var module = MySingletonModule.Instance;
+    /// 
     ///     // 获取模块名称
-    ///     var moduleName = module.Name;
+    ///     var name = module.Name;
     /// 
-    ///     // 控制模块启用状态
-    ///     module.Enabled = true;
-    /// 
-    ///     // 获取模块日志标签
+    ///     // 获取模块标签
     ///     var tags = module.Tags;
     /// 
-    /// 2.2 事件系统
+    ///     // 开始运行模块
+    ///     module.Start();
     /// 
-    ///     // 获取模块事件管理器
-    ///     var eventManager = module.Event;
+    ///     // 停止运行模块
+    ///     module.Stop();
+    /// 
+    ///     // 重置模块状态
+    ///     module.Reset();
+    /// 
+    /// 2.2 事件系统
     /// 
     ///     // 注册事件
     ///     module.Event.Reg(eid, callback);
@@ -61,10 +63,10 @@ namespace EFramework.Modulize
     ///     // 注销事件
     ///     module.Event.Unreg(eid, callback);
     /// 
-    ///     // 触发事件
+    ///     // 通知事件
     ///     module.Event.Notify(eid, args);
     /// 
-    /// 2.3 事件特性
+    /// 2.3. 事件特性
     /// 
     ///     // 定义模块
     ///     public class MyModule : XModule.Base&lt;MyModule&gt; { }
@@ -101,10 +103,10 @@ namespace EFramework.Modulize
     /// 
     ///     // TODO: 根据标记的事件特性注册事件
     ///
-    /// 事件特性说明：
-    /// - 支持事件标识（`ID`）、模块类型（字段名必须为 `Instance`）及单次回调（`Once=true`）等标记选项
-    /// - 支持实例方法和静态方法及多种方法签名（无参、有参、返回值），支持继承类中的事件特性
-    /// - 特性标记维护只事件的元数据，需要业务层自行实现事件注册/注销的行为
+    /// 特性说明：
+    /// - 支持事件标识（`ID`）、模块类型（字段名必须为 `Instance`）及单次回调（`Once`）等标记选项
+    /// - 支持实例方法和静态方法等种方法签名（无参、有参、返值），支持继承类中的事件特性
+    /// - 特性标记只维护事件的元数据，业务层需自行实现事件注册/注销的行为，可参考 `XView` 模块
     /// </code>
     /// 更多信息请参考模块文档。
     /// </remarks>

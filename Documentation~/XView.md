@@ -4,189 +4,207 @@
 [![Downloads](https://img.shields.io/npm/dm/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)
 [![DeepWiki](https://img.shields.io/badge/DeepWiki-Explore-blue)](https://deepwiki.com/eframework-org/U3D.MSV)
 
-XView 提供了业务开发的基础视图，通过业务处理器（Handler）的模式实现了视图的管理功能。
+XView 提供了业务开发的基础视图，通过适配器模式实现了视图的管理功能。
 
 ## 功能特性
 
-- 业务处理器：通过 handler 控制视图，实现了加载、显示、排序等功能
-- 高可用拓展：提供了视图元素特性标记，支持 Unity UI、FairyGUI、Next Gen GUI 等 UI 插件
+- 业务适配器：通过适配器实例控制视图，实现了加载、绑定、显示、排序等功能
+- 高可用拓展：提供了视图元素特性标记，支持 Unity UI、FairyGUI 等 UI 插件
 
 ## 使用手册
 
-### 1. 创建视图
+### 1. 定义视图
 
-1. 基础视图
-    ```csharp
-    // 基础视图
-    public class MyView : XView.Base { }
-    ```
+#### 1.1 基础视图
 
-2. 视图描述
-    ```csharp
-    // 创建描述
-    var meta = new XView.Meta(
-        path: "Prefabs/MyView",           // 预制体路径
-        fixedRQ: 0,                       // 固定渲染顺序
-        focus: XView.EventType.Dynamic,   // 焦点类型
-        cache: XView.CacheType.Scene,     // 缓存类型
-        multiple: false                   // 是否支持多实例
-    );
-    ```
+```csharp
+// 基础视图
+public class MyView : XView.Base { }
 
-3. 事件系统
+// 模块视图
+public class MyModulizedView : XView.Base<MyModulizedView> { }
+```
 
-基础事件示例：
+#### 1.2 视图描述
 
-    ```csharp
-    // 注册事件
-    Event.Reg(eid, callback);
-    Event.Reg<T1>(eid, callback);
-    Event.Reg<T1, T2>(eid, callback);
-    Event.Reg<T1, T2, T3>(eid, callback);
+```csharp
+// 创建描述
+var meta = new XView.Meta(
+    path: "Prefabs/MyView",           // 预制体路径
+    fixedRQ: 0,                       // 固定渲染顺序
+    focus: XView.EventType.Dynamic,   // 焦点类型
+    cache: XView.CacheType.Scene,     // 缓存类型
+    multiple: false                   // 是否支持多实例
+);
+```
 
-    // 注销事件
-    Event.Unreg(eid, callback);
-    Event.Unreg<T1>(eid, callback);
-    Event.Unreg<T1, T2>(eid, callback);
-    Event.Unreg<T1, T2, T3>(eid, callback);
+#### 1.3 事件系统
 
-    // 触发事件
-    Event.Notify(eid, manager, args);
-    ```
+基础示例：
 
-事件标记示例：
+```csharp
+// 注册事件
+Event.Reg(eid, callback);
+Event.Reg<T1>(eid, callback);
+Event.Reg<T1, T2>(eid, callback);
+Event.Reg<T1, T2, T3>(eid, callback);
 
-    ```csharp
-    // 定义模块
-    public class MyModule : XModule.Base<MyModule> { }
+// 注销事件
+Event.Unreg(eid, callback);
+Event.Unreg<T1>(eid, callback);
+Event.Unreg<T1, T2>(eid, callback);
+Event.Unreg<T1, T2, T3>(eid, callback);
 
-    // 定义事件
-    public enum MyEvent
-    {
-        Event1,
-        Event2,
-        Event3,
-    }
+// 通知事件
+Event.Notify(eid, manager, args);
+```
 
-    // 事件标记
-    public class MyView : XView.Base<MyModule> {
-        // 模块事件注册（指定模块类型）
-        [XModule.Event(MyEvent.Event1, typeof(MyModule))]
-        private void OnEvent1() { }
+标记示例：
 
-        // 模块事件注册（单次触发）
-        [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
-        private void OnEvent2(params object[] args) { }
-
-        // 模块事件注册（当前视图关联的模块）
-        [XModule.Event(MyEvent.Event3)]
-        private void OnEvent3() { }
-    }
-    ```
-
-事件标记说明：
 - 事件标记会在视图 `OnEnable` 时自动注册，在视图 `OnDisable` 时自动注销
 - 若未指定模块类型，则使用当前视图关联的模块
 
-4. 视图特性
-    ```csharp
-    // 类特性标记
-    [XView.Element("类特性名称")]
-    [XView.Element("类特性名称带参数", "参数值")]
-    public class MyView : XView.Base
-    {
-        // 字段特性标记
-        [XView.Element("字段特性名称")]
-        private Button button;
+```csharp
+// 定义模块
+public class MyModule : XModule.Base<MyModule> { }
 
-        // 字段特性标记带参数
-        [XView.Element("字段特性名称带参数", "参数值")]
-        private Text text;
+// 定义事件
+public enum MyEvent
+{
+    Event1,
+    Event2,
+    Event3,
+}
 
-        // 方法特性标记
-        [XView.Element("方法特性名称")]
-        private void OnButtonClick() { }
+// 事件标记
+public class MyView : XView.Base<MyModule> {
+    // 模块事件注册（指定模块类型）
+    [XModule.Event(MyEvent.Event1, typeof(MyModule))]
+    private void OnEvent1() { }
 
-        // 方法特性标记带参数
-        [XView.Element("方法特性名称带参数", "参数值")]
-        private void OnTextChanged() { }
-    }
-    ```
+    // 模块事件注册（单次触发）
+    [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
+    private void OnEvent2(params object[] args) { }
 
-视图特性说明：
+    // 模块事件注册（当前视图关联的模块）
+    [XModule.Event(MyEvent.Event3)]
+    private void OnEvent3(int paramA, int paramB) { }
+}
+```
+
+#### 1.4 视图特性
+
 - 可用于标记视图元素的元数据，实现视图绑定和事件绑定
 - 子类会继承父类的所有特性标记，可应用于类、字段和方法
 - 视图特性会在视图 `Awake` 时回调 `Handler.SetBinding` 方法
-- 特性标记只维护视图的元数据，需要业务层自行处理视图的绑定行为
+- 特性标记只维护视图的元数据，业务层需要自行处理视图的绑定行为
+
+使用示例：
+
+```csharp
+// 类特性标记
+[XView.Element("类特性名称")]
+[XView.Element("类特性名称带参数", "参数值")]
+public class MyView : XView.Base
+{
+    // 字段特性标记
+    [XView.Element("字段特性名称")]
+    private Button button;
+
+    // 字段特性标记带参数
+    [XView.Element("字段特性名称带参数", "参数值")]
+    private Text text;
+
+    // 方法特性标记
+    [XView.Element("方法特性名称")]
+    private void OnButtonClick() { }
+
+    // 方法特性标记带参数
+    [XView.Element("方法特性名称带参数", "参数值")]
+    private void OnTextChanged() { }
+}
+```
 
 ### 2. 视图管理
 
-1. 初始化
-    ```csharp
-    // 创建自定义Handler
-    public class MyHandler : XView.IHandler 
+#### 2.1 初始化
+
+使用示例：
+
+```csharp
+// 创建自定义Handler
+public class MyHandler : XView.IHandler 
+{
+    public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
     {
-        public void Load(XView.IMeta meta, Transform parent, out XView.IBase view, out GameObject panel)
-        {
-            // 实现视图加载逻辑
-        }
-
-        public void LoadAsync(XView.IMeta meta, Transform parent, Action<XView.IBase, GameObject> callback)
-        {
-            // 实现异步加载逻辑
-        }
-
-        public bool Loading(XView.IMeta meta) { 
-            // 是否正在加载视图
-        }
-
-        public void SetBinding(GameObject go, object target, XView.Element[] elements)
-        {
-            // 实现视图绑定逻辑
-        }
-
-        public void SetOrder(XView.IBase view, int order)
-        {
-            // 实现视图排序逻辑
-        }
-
-        public void SetFocus(XView.IBase view, bool focus)
-        {
-            // 实现焦点设置逻辑
-        }
+        // 实现视图加载逻辑
     }
 
-    // 初始化视图系统
-    var handler = new MyHandler();
-    XView.Initialize(handler);
-    ```
+    public void LoadAsync(XView.IMeta meta, Transform parent, Action<XView.IBase, GameObject> callback)
+    {
+        // 实现异步加载逻辑
+    }
 
-2. 打开视图
-    ```csharp
-    // 同步打开视图
-    var view = XView.Open(meta, args);
+    public bool Loading(XView.IMeta meta) { 
+        // 是否正在加载视图
+    }
 
-    // 异步打开视图
-    XView.OpenAsync(meta, callback, args);
-    ```
+    public void SetBinding(GameObject go, object target, XView.Element[] elements)
+    {
+        // 实现视图绑定逻辑
+    }
 
-3. 关闭视图
-    ```csharp
-    // 关闭指定视图
-    XView.Close(meta, resume);
+    public void SetOrder(XView.IBase view, int order)
+    {
+        // 实现视图排序逻辑
+    }
 
-    // 关闭所有视图
-    XView.CloseAll(exclude);
-    ```
+    public void SetFocus(XView.IBase view, bool focus)
+    {
+        // 实现焦点设置逻辑
+    }
+}
 
-4. 视图排序
-    ```csharp
-    // 设置视图顺序
-    XView.Sort(view, below, above);
+// 初始化视图系统
+var handler = new MyHandler();
+XView.Initialize(handler);
+```
 
-    // 恢复默认顺序
-    XView.Resume();
-    ```
+#### 2.2 打开视图
+
+使用示例：
+
+```csharp
+// 同步打开视图
+var view = XView.Open(meta, args);
+
+// 异步打开视图
+XView.OpenAsync(meta, callback, args);
+```
+
+#### 2.3 关闭视图
+
+使用示例：
+
+```csharp
+// 关闭指定视图
+XView.Close(meta, resume);
+
+// 关闭所有视图
+XView.CloseAll(exclude);
+```
+
+#### 2.4 视图排序
+
+使用示例：
+
+```csharp
+// 设置视图顺序
+XView.Sort(view, below, above);
+
+// 恢复默认顺序
+XView.Resume();
+```
 
 ## 常见问题
 

@@ -3,15 +3,15 @@
 // license that can be found in the LICENSE file.
 
 #if UNITY_INCLUDE_TESTS
-using NUnit.Framework;
-using EFramework.Modulize;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
-using UnityEngine.TestTools;
 using System.Collections;
 using System.Text.RegularExpressions;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using NUnit.Framework;
+using EFramework.Modulize;
 using EFramework.Utility;
 
 public class TestXView
@@ -88,6 +88,7 @@ public class TestXView
     private class MyView : XView.Base
     {
         public Action OnOpenCallback;
+
         public override void OnOpen(params object[] args)
         {
             base.OnOpen(args);
@@ -95,6 +96,7 @@ public class TestXView
         }
 
         public Action OnFocusCallback;
+
         public override void OnFocus()
         {
             base.OnFocus();
@@ -102,6 +104,7 @@ public class TestXView
         }
 
         public Action OnBlurCallback;
+
         public override void OnBlur()
         {
             base.OnBlur();
@@ -109,6 +112,7 @@ public class TestXView
         }
 
         public Action OnCloseCallback;
+
         public override void OnClose(Action done)
         {
             OnCloseCallback?.Invoke();
@@ -117,9 +121,11 @@ public class TestXView
         }
 
         public bool OnEvent2Called = false;
-        public object[] OnEvent2Param;
+
+        public int OnEvent2Param;
+
         [XModule.Event(MyEvent.Event2, typeof(MyModule), true)]
-        public void OnEvent2(params object[] param) { OnEvent2Called = true; OnEvent2Param = param; }
+        public void OnEvent2(int param) { OnEvent2Called = true; OnEvent2Param = param; }
     }
 
     [XView.Element("MyModulizedView Class Attr")]
@@ -128,11 +134,11 @@ public class TestXView
     {
         public bool OnEvent3Called = false;
 
-        public object[] OnEvent3Param;
+        public int OnEvent3Param;
 
         [XModule.Event(MyEvent.Event3)]
         [XView.Element("MyModulizedView Method Attr")]
-        public void OnEvent3(params object[] param) { OnEvent3Called = true; OnEvent3Param = param; }
+        public void OnEvent3(int param) { OnEvent3Called = true; OnEvent3Param = param; }
     }
 
     [XView.Element("MySubView Class Attr")]
@@ -142,20 +148,14 @@ public class TestXView
         [XView.Element("MySubView Field Attr")]
         public bool OnEvent4Called = false;
 
-        [XView.Element("MySubView Field Attr Extras", "Hello OnEvent4Param")]
-        public object[] OnEvent4Param;
+        [XView.Element("MySubView Field Attr Extras", "Hello OnEvent4Param1")]
+        public int OnEvent4Param1;
+
+        public bool OnEvent4Param2;
 
         [XModule.Event(MyEvent.Event4)]
         [XView.Element("MySubView Method Attr Extras", "Hello OnEvent4")]
-        public void OnEvent4(params object[] param) { OnEvent4Called = true; OnEvent4Param = param; }
-    }
-
-    private enum TestEvent
-    {
-        Test1,
-        Test2,
-        Test3,
-        Test4,
+        public void OnEvent4(int param1, bool param2) { OnEvent4Called = true; OnEvent4Param1 = param1; OnEvent4Param2 = param2; }
     }
 
     private XView.Meta testMeta;
@@ -174,7 +174,7 @@ public class TestXView
     [TearDown]
     public void Reset()
     {
-        if (testPanel != null) GameObject.Destroy(testPanel);
+        if (testPanel != null) UnityEngine.Object.Destroy(testPanel);
         XView.CloseAll();
     }
 
@@ -214,11 +214,11 @@ public class TestXView
         #region 特性绑定模块
         {
             myView.OnEvent2Called = false;
-            myView.OnEvent2Param = null;
+            myView.OnEvent2Param = 0;
             MyModule.Instance.Event.Notify(MyEvent.Event2, 1002);
 
             Assert.IsTrue(myView.OnEvent2Called, "特性绑定模块注册事件后触发通知应当调用回调函数。");
-            Assert.AreEqual(myView.OnEvent2Param[0], 1002, "特性绑定模块注册事件后触发通知调用回调函数的透传参数1应当相等。");
+            Assert.AreEqual(myView.OnEvent2Param, 1002, "特性绑定模块注册事件后触发通知调用回调函数的透传参数1应当相等。");
 
             myView.OnEvent2Called = false;
             MyModule.Instance.Event.Notify(MyEvent.Event2);
@@ -229,14 +229,14 @@ public class TestXView
         #region 特性默认模块
         {
             myModulizedView.OnEvent3Called = false;
-            myModulizedView.OnEvent3Param = null;
+            myModulizedView.OnEvent3Param = 0;
             MyModule.Instance.Event.Notify(MyEvent.Event3, 1003);
 
             Assert.IsTrue(myModulizedView.OnEvent3Called, "特性默认模块注册事件后触发通知应当调用回调函数。");
-            Assert.AreEqual(myModulizedView.OnEvent3Param[0], 1003, "特性默认模块注册事件后触发通知调用回调函数的透传参数1应当相等。");
+            Assert.AreEqual(myModulizedView.OnEvent3Param, 1003, "特性默认模块注册事件后触发通知调用回调函数的透传参数1应当相等。");
 
             myModulizedView.OnEvent3Called = false;
-            MyModule.Instance.Event.Notify(MyEvent.Event3);
+            MyModule.Instance.Event.Notify(MyEvent.Event3, 1003);
             Assert.IsTrue(myModulizedView.OnEvent3Called, "特性默认模块注册事件后再次触发通知应当调用回调函数。");
         }
         #endregion
@@ -244,22 +244,24 @@ public class TestXView
         #region 特性继承模块
         {
             mySubView.OnEvent3Called = false;
-            mySubView.OnEvent3Param = null;
+            mySubView.OnEvent3Param = 0;
             mySubView.OnEvent4Called = false;
-            mySubView.OnEvent4Param = null;
+            mySubView.OnEvent4Param1 = 0;
+            mySubView.OnEvent4Param2 = false;
             MyModule.Instance.Event.Notify(MyEvent.Event3, 1003);
-            MyModule.Instance.Event.Notify(MyEvent.Event4, 1004);
+            MyModule.Instance.Event.Notify(MyEvent.Event4, 1004, true);
 
             Assert.IsTrue(mySubView.OnEvent3Called, "特性继承模块注册事件后触发通知应当调用父类回调函数。");
-            Assert.AreEqual(mySubView.OnEvent3Param[0], 1003, "特性继承模块注册事件后触发通知调用父类回调函数的透传参数1应当相等。");
+            Assert.AreEqual(mySubView.OnEvent3Param, 1003, "特性继承模块注册事件后触发通知调用父类回调函数的透传参数1应当相等。");
 
             Assert.IsTrue(mySubView.OnEvent4Called, "特性继承模块注册事件后触发通知应当调用子类回调函数。");
-            Assert.AreEqual(mySubView.OnEvent4Param[0], 1004, "特性继承模块注册事件后触发通知调用子类回调函数的透传参数1应当相等。");
+            Assert.AreEqual(mySubView.OnEvent4Param1, 1004, "特性继承模块注册事件后触发通知调用子类回调函数的透传参数1应当相等。");
+            Assert.AreEqual(mySubView.OnEvent4Param2, true, "特性继承模块注册事件后触发通知调用子类回调函数的透传参数2应当相等。");
 
             mySubView.OnEvent3Called = false;
             mySubView.OnEvent4Called = false;
-            MyModule.Instance.Event.Notify(MyEvent.Event3);
-            MyModule.Instance.Event.Notify(MyEvent.Event4);
+            MyModule.Instance.Event.Notify(MyEvent.Event3, 1003);
+            MyModule.Instance.Event.Notify(MyEvent.Event4, 1004, false);
             Assert.IsTrue(mySubView.OnEvent3Called, "特性继承模块注册事件后再次触发通知应当调用父类回调函数。");
             Assert.IsTrue(mySubView.OnEvent4Called, "特性继承模块注册事件后再次触发通知应当调用子类回调函数。");
         }
@@ -276,25 +278,25 @@ public class TestXView
                 object[] param1 = null;
                 void callback(params object[] args) { called = true; param1 = args; }
 
-                Assert.IsTrue(view.Event.Reg(TestEvent.Test1, callback, true), "非泛型注册事件应当成功。");
-                context.Notify(TestEvent.Test1, 1001);
+                Assert.IsTrue(view.Event.Reg(MyEvent.Event1, callback, true), "非泛型注册事件应当成功。");
+                context.Notify(MyEvent.Event1, 1001);
                 Assert.IsTrue(called, "非泛型注册事件后触发通知应当调用回调函数。");
                 Assert.AreEqual(param1[0], 1001, "非泛型注册事件后触发通知调用回调函数的透传参数1应当相等。");
 
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "非泛型再次触发回调一次的事件应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg(TestEvent.Test1, callback, false), "非泛型注册事件应当成功。");
-                Assert.IsTrue(view.Event.Unreg(TestEvent.Test1, callback), "非泛型注销事件应当成功。");
+                Assert.IsTrue(view.Event.Reg(MyEvent.Event1, callback, false), "非泛型注册事件应当成功。");
+                Assert.IsTrue(view.Event.Unreg(MyEvent.Event1, callback), "非泛型注销事件应当成功。");
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "非泛型注销事件后触发通知应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg(TestEvent.Test1, callback, false), "非泛型注册事件应当成功。");
+                Assert.IsTrue(view.Event.Reg(MyEvent.Event1, callback, false), "非泛型注册事件应当成功。");
                 view.Event.Clear();
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "非泛型清除事件后触发通知应当不调用回调函数。");
             }
             #endregion
@@ -305,25 +307,25 @@ public class TestXView
                 var param1 = 0;
                 void callback(int p1) { called = true; param1 = p1; }
 
-                Assert.IsTrue(view.Event.Reg<int>(TestEvent.Test1, callback, true), "泛型 <T1> 注册事件应当成功。");
-                context.Notify(TestEvent.Test1, 1001);
+                Assert.IsTrue(view.Event.Reg<int>(MyEvent.Event1, callback, true), "泛型 <T1> 注册事件应当成功。");
+                context.Notify(MyEvent.Event1, 1001);
                 Assert.IsTrue(called, "泛型 <T1> 注册事件后触发通知应当调用回调函数。");
                 Assert.AreEqual(param1, 1001, "泛型 <T1> 注册事件后触发通知调用回调函数的透传参数1应当相等。");
 
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1> 再次触发回调一次的事件应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int>(TestEvent.Test1, callback, false), "泛型 <T1> 注册事件应当成功。");
-                Assert.IsTrue(view.Event.Unreg<int>(TestEvent.Test1, callback), "泛型 <T1> 注销事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int>(MyEvent.Event1, callback, false), "泛型 <T1> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Unreg<int>(MyEvent.Event1, callback), "泛型 <T1> 注销事件应当成功。");
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1> 注销事件后触发通知应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int>(TestEvent.Test1, callback, false), "泛型 <T1> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int>(MyEvent.Event1, callback, false), "泛型 <T1> 注册事件应当成功。");
                 view.Event.Clear();
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1> 清除事件后触发通知应当不调用回调函数。");
             }
             #endregion
@@ -335,26 +337,26 @@ public class TestXView
                 var param2 = 0;
                 void callback(int p1, int p2) { called = true; param1 = p1; param2 = p2; }
 
-                Assert.IsTrue(view.Event.Reg<int, int>(TestEvent.Test1, callback, true), "泛型 <T1, T2> 注册事件应当成功。");
-                context.Notify(TestEvent.Test1, 1001, 1002);
+                Assert.IsTrue(view.Event.Reg<int, int>(MyEvent.Event1, callback, true), "泛型 <T1, T2> 注册事件应当成功。");
+                context.Notify(MyEvent.Event1, 1001, 1002);
                 Assert.IsTrue(called, "泛型 <T1, T2> 注册事件后触发通知应当调用回调函数。");
                 Assert.AreEqual(param1, 1001, "泛型 <T1, T2> 注册事件后触发通知调用回调函数的透传参数1应当相等。");
                 Assert.AreEqual(param2, 1002, "泛型 <T1, T2> 注册事件后触发通知调用回调函数的透传参数2应当相等。");
 
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2> 再次触发回调一次的事件应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int, int>(TestEvent.Test1, callback, false), "泛型 <T1, T2> 注册事件应当成功。");
-                Assert.IsTrue(view.Event.Unreg<int, int>(TestEvent.Test1, callback), "泛型 <T1, T2> 注销事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int, int>(MyEvent.Event1, callback, false), "泛型 <T1, T2> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Unreg<int, int>(MyEvent.Event1, callback), "泛型 <T1, T2> 注销事件应当成功。");
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2> 注销事件后触发通知应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int, int>(TestEvent.Test1, callback, false), "泛型 <T1, T2> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int, int>(MyEvent.Event1, callback, false), "泛型 <T1, T2> 注册事件应当成功。");
                 view.Event.Clear();
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2> 清除事件后触发通知应当不调用回调函数。");
             }
             #endregion
@@ -367,27 +369,27 @@ public class TestXView
                 var param3 = 0;
                 void callback(int p1, int p2, int p3) { called = true; param1 = p1; param2 = p2; param3 = p3; }
 
-                Assert.IsTrue(view.Event.Reg<int, int, int>(TestEvent.Test1, callback, true), "泛型 <T1, T2, T3> 注册事件应当成功。");
-                context.Notify(TestEvent.Test1, 1001, 1002, 1003);
+                Assert.IsTrue(view.Event.Reg<int, int, int>(MyEvent.Event1, callback, true), "泛型 <T1, T2, T3> 注册事件应当成功。");
+                context.Notify(MyEvent.Event1, 1001, 1002, 1003);
                 Assert.IsTrue(called, "泛型 <T1, T2, T3> 注册事件后触发通知应当调用回调函数。");
                 Assert.AreEqual(param1, 1001, "泛型 <T1, T2, T3> 注册事件后触发通知调用回调函数的透传参数1应当相等。");
                 Assert.AreEqual(param2, 1002, "泛型 <T1, T2, T3> 注册事件后触发通知调用回调函数的透传参数2应当相等。");
                 Assert.AreEqual(param3, 1003, "泛型 <T1, T2, T3> 注册事件后触发通知调用回调函数的透传参数3应当相等。");
 
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2, T3> 再次触发回调一次的事件应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int, int, int>(TestEvent.Test1, callback, false), "泛型 <T1, T2, T3> 注册事件应当成功。");
-                Assert.IsTrue(view.Event.Unreg<int, int, int>(TestEvent.Test1, callback), "泛型 <T1, T2, T3> 注销事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int, int, int>(MyEvent.Event1, callback, false), "泛型 <T1, T2, T3> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Unreg<int, int, int>(MyEvent.Event1, callback), "泛型 <T1, T2, T3> 注销事件应当成功。");
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2, T3> 注销事件后触发通知应当不调用回调函数。");
 
-                Assert.IsTrue(view.Event.Reg<int, int, int>(TestEvent.Test1, callback, false), "泛型 <T1, T2, T3> 注册事件应当成功。");
+                Assert.IsTrue(view.Event.Reg<int, int, int>(MyEvent.Event1, callback, false), "泛型 <T1, T2, T3> 注册事件应当成功。");
                 view.Event.Clear();
                 called = false;
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "泛型 <T1, T2, T3> 清除事件后触发通知应当不调用回调函数。");
             }
             #endregion
@@ -398,12 +400,12 @@ public class TestXView
                 var calledT1 = false;
                 var calledT2 = false;
                 var calledT3 = false;
-                view.Event.Reg(TestEvent.Test1, (_) => called = true, false);
-                view.Event.Reg<int>(TestEvent.Test1, (_) => calledT1 = true, false);
-                view.Event.Reg<int, int>(TestEvent.Test1, (_, _) => calledT2 = true, false);
-                view.Event.Reg<int, int, int>(TestEvent.Test1, (_, _, _) => calledT3 = true, false);
+                view.Event.Reg(MyEvent.Event1, (_) => called = true, false);
+                view.Event.Reg<int>(MyEvent.Event1, (_) => calledT1 = true, false);
+                view.Event.Reg<int, int>(MyEvent.Event1, (_, _) => calledT2 = true, false);
+                view.Event.Reg<int, int, int>(MyEvent.Event1, (_, _, _) => calledT3 = true, false);
                 UnityEngine.Object.DestroyImmediate(view);
-                context.Notify(TestEvent.Test1);
+                context.Notify(MyEvent.Event1);
                 Assert.IsFalse(called, "非泛型删除对象后触发通知应当不调用回调函数。");
                 Assert.IsFalse(calledT1, "泛型 <T1> 删除对象后触发通知应当不调用回调函数。");
                 Assert.IsFalse(calledT2, "泛型 <T1, T2> 删除对象后触发通知应当不调用回调函数。");
@@ -466,8 +468,8 @@ public class TestXView
             Assert.AreEqual(type.GetMember("OnEvent4Called")[0], elements[6].Reflect, "子类标记在字段上的元素特性的反射信息应当和所属字段相等。");
 
             Assert.AreEqual("MySubView Field Attr Extras", elements[7].Name, "子类标记在字段上的元素特性的名称应当和设置的相等。");
-            Assert.AreEqual(type.GetMember("OnEvent4Param")[0], elements[7].Reflect, "子类标记在字段上的元素特性的反射信息应当和所属字段相等。");
-            Assert.AreEqual("Hello OnEvent4Param", elements[7].Extras, "子类标记在字段上的元素特性的参数应当和设置的相等。");
+            Assert.AreEqual(type.GetMember("OnEvent4Param1")[0], elements[7].Reflect, "子类标记在字段上的元素特性的反射信息应当和所属字段相等。");
+            Assert.AreEqual("Hello OnEvent4Param1", elements[7].Extras, "子类标记在字段上的元素特性的参数应当和设置的相等。");
         }
         #endregion
     }
@@ -599,7 +601,7 @@ public class TestXView
         Assert.IsNotNull(reloadedView, "从缓存加载的视图不应为空");
         Assert.AreSame(cachedView, reloadedView, "应当从缓存中获取到相同的视图实例");
 
-        if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
+        if (parentTransform != null) UnityEngine.Object.Destroy(parentTransform.gameObject);
     }
 
     [Test]
@@ -762,7 +764,7 @@ public class TestXView
 
         // 测试Panel为null的情况
         var testView = XView.Open(new XView.Meta("TestView"));
-        GameObject.DestroyImmediate(testView.Panel);
+        UnityEngine.Object.DestroyImmediate(testView.Panel);
         int initialCount = XView.openedView.Count;
         LogAssert.Expect(LogType.Error, new Regex("XView.Sort: view .* has already been destroyed."));
         XView.Sort(null, null, null); // 调用Sort应该清理无效视图
@@ -793,7 +795,7 @@ public class TestXView
         Assert.IsNotNull(foundView);
         Assert.AreSame(openedView, foundView);
 
-        if (parentTransform != null) GameObject.Destroy(parentTransform.gameObject);
+        if (parentTransform != null) UnityEngine.Object.Destroy(parentTransform.gameObject);
     }
 
     #endregion

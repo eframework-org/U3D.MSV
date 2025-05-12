@@ -8,26 +8,22 @@ using EFramework.Utility;
 namespace EFramework.Modulize
 {
     /// <summary>
-    /// XScene 是一个基于模块框架设计的场景状态机，支持业务场景的切换及其生命周期管理。
+    /// XScene 提供了业务开发的基础场景，支持业务场景的切换及其生命周期管理。
     /// </summary>
     /// <remarks>
     /// <code>
     /// 功能特性
     /// - 业务场景切换：通过状态机模式实现业务场景的切换功能
-    /// - 生命周期管理：提供了Start、Update、Stop等状态控制
+    /// - 生命周期管理：提供了 Start、Update、Stop 等状态控制
     /// 
     /// 使用手册
-    /// 1. 创建场景
-    /// 
-    /// 1.1 基础场景
+    /// 1. 定义场景
     /// 
     ///     // 基础场景
     ///     public class MyScene : XScene.Base
     ///     {
     ///         public override string Name =&gt; "MyScene";
     ///     }
-    /// 
-    /// 1.2 单例场景
     /// 
     ///     // 单例场景
     ///     public class MySingletonScene : XScene.Base&lt;MySingletonScene&gt;
@@ -39,29 +35,28 @@ namespace EFramework.Modulize
     /// 
     /// 2.1 场景切换
     /// 
-    ///     // 获取代理实例
-    ///     XScene.OnProxy = proxy =&gt; new MyScene(proxy);
-    /// 
     ///     // 切换业务场景
     ///     XScene.Goto(scene, args);
+    /// 
+    ///     // 设置代理实例
+    ///     XScene.OnProxy = proxy =&gt; new MyScene(proxy);
     /// 
     /// 2.2 场景状态
     /// 
     ///     // 获取当前场景
-    ///     var currentScene = XScene.Current;
+    ///     var current = XScene.Current;
     /// 
-    ///     // 获取上一个场景
-    ///     var lastScene = XScene.Last;
+    ///     // 获取上一场景
+    ///     var last = XScene.Last;
     /// 
-    ///     // 获取下一个场景
-    ///     var nextScene = XScene.Next;
+    ///     // 获取下一场景
+    ///     var next = XScene.Next;
     /// 
-    /// 2.3 场景事件
-    /// 
-    ///     // 注册场景切换事件
+    ///     // 监听场景切换
     ///     XScene.OnSwap += () =&gt; {
     ///         // 场景切换完成后的处理逻辑
     ///     };
+    /// 
     /// </code>
     /// 更多信息请参考场景文档。
     /// </remarks>
@@ -157,7 +152,7 @@ namespace EFramework.Modulize
         public static Func<object, IBase> OnProxy;
 
         /// <summary>
-        /// 获取上一个场景。
+        /// 获取上一场景。
         /// </summary>
         public static IBase Last { get; internal set; }
 
@@ -167,7 +162,7 @@ namespace EFramework.Modulize
         public static IBase Current { get; internal set; }
 
         /// <summary>
-        /// 获取下一个场景。
+        /// 获取下一场景。
         /// </summary>
         public static IBase Next { get; internal set; }
 

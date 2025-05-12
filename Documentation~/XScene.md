@@ -4,65 +4,60 @@
 [![Downloads](https://img.shields.io/npm/dm/org.eframework.u3d.msv)](https://www.npmjs.com/package/org.eframework.u3d.msv)
 [![DeepWiki](https://img.shields.io/badge/DeepWiki-Explore-blue)](https://deepwiki.com/eframework-org/U3D.MSV)
 
-XScene 是一个基于模块框架设计的场景状态机，支持业务场景的切换及其生命周期管理。
+XScene 提供了业务开发的基础场景，支持业务场景的切换及其生命周期管理。
 
 ## 功能特性
 
 - 业务场景切换：通过状态机模式实现业务场景的切换功能
-- 生命周期管理：提供了Start、Update、Stop等状态控制
+- 生命周期管理：提供了 Start、Update、Stop 等状态控制
 
 ## 使用手册
 
-### 1. 创建场景
+### 1. 定义场景
 
-1. 基础场景
-    ```csharp
-    // 基础场景
-    public class MyScene : XScene.Base
-    {
-        public override string Name => "MyScene";
-    }
-    ```
+```csharp
+// 基础场景
+public class MyScene : XScene.Base
+{
+    public override string Name => "MyScene";
+}
 
-2. 单例场景
-    ```csharp
-    // 单例场景
-    public class MySingletonScene : XScene.Base<MySingletonScene>
-    {
-        public override string Name => "MySingletonScene";
-    }
-    ```
+// 单例场景
+public class MySingletonScene : XScene.Base<MySingletonScene>
+{
+    public override string Name => "MySingletonScene";
+}
+```
 
 ### 2. 场景管理
 
-1. 场景切换
-    ```csharp
-    // 获取代理实例
-    XScene.OnProxy = proxy => new MyScene(proxy);
+#### 2.1 场景切换
 
-    // 切换业务场景
-    XScene.Goto(scene, args);
-    ```
+```csharp
+// 切换业务场景
+XScene.Goto(scene, args);
 
-2. 场景状态
-    ```csharp
-    // 获取当前场景
-    var currentScene = XScene.Current;
+// 设置代理实例
+XScene.OnProxy = proxy => new MyScene(proxy);
+```
 
-    // 获取上一个场景
-    var lastScene = XScene.Last;
+#### 2.2 场景状态
 
-    // 获取下一个场景
-    var nextScene = XScene.Next;
-    ```
+```csharp
+// 获取当前场景
+var current = XScene.Current;
 
-3. 场景事件
-    ```csharp
-    // 注册场景切换事件
-    XScene.OnSwap += () => {
-        // 场景切换完成后的处理逻辑
-    };
-    ```
+// 获取上一场景
+var last = XScene.Last;
+
+// 获取下一场景
+var next = XScene.Next;
+
+// 监听场景切换
+XScene.OnSwap += () => {
+    // 场景切换完成后的处理逻辑
+};
+```
 
 ## 常见问题
 
