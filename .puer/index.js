@@ -340,11 +340,12 @@ CS.EFramework.Modulize.XView.Module = function (type) {
     return function (target) { target[XViewModuleTag] = type }
 }
 
-CS.EFramework.Modulize.XView.Element = function (name, extras) {
+CS.EFramework.Modulize.XView.Element = function (name, ...extras) {
     return function (target, propertyKey) {
         target[XViewElementTag] = target[XViewElementTag] || new Array()
         if (!name) name = propertyKey
-        const cproxy = new XViewElement(name, extras, propertyKey)
+        const cproxy = new XViewElement(name, ...extras)
+        cproxy.Reflect = propertyKey
         target[XViewElementTag].push(cproxy)
     }
 }

@@ -22,7 +22,7 @@ declare namespace CS {
              * @param name 元素名称。
              * @param method 自定义描述。
              */
-            export function Element(name: string, extras: string = null): (target: any, propertyKey: string) => void
+            export function Element(name: string, ...extras: any[]): (target: any, propertyKey: string) => void
         }
     }
 }

@@ -438,7 +438,7 @@ public class TestXView
 
             Assert.AreEqual("MyModulizedView Class Attr Extras", elements[1].Name, "父类标记在类上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type, elements[1].Reflect, "父类标记在类上的元素特性的反射信息应当和所属类相等。");
-            Assert.AreEqual("Hello MyModulizedView", elements[1].Extras, "父类标记在类上的元素特性的参数应当和设置的相等。");
+            Assert.AreEqual("Hello MyModulizedView", elements[1].Extras[0], "父类标记在类上的元素特性的参数应当和设置的相等。");
 
             Assert.AreEqual("MyModulizedView Method Attr", elements[2].Name, "父类标记在方法上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type.GetMember("OnEvent3")[0], elements[2].Reflect, "父类标记在方法上的元素特性的反射信息应当和所属方法相等。");
@@ -458,18 +458,18 @@ public class TestXView
 
             Assert.AreEqual("MySubView Class Attr Extras", elements[1].Name, "子类标记在类上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type, elements[1].Reflect, "子类标记在类上的元素特性的反射信息应当和所属类相等。");
-            Assert.AreEqual("Hello MySubView", elements[1].Extras, "子类标记在类上的元素特性的参数应当和设置的相等。");
+            Assert.AreEqual("Hello MySubView", elements[1].Extras[0], "子类标记在类上的元素特性的参数应当和设置的相等。");
 
             Assert.AreEqual("MySubView Method Attr Extras", elements[4].Name, "子类标记在方法上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type.GetMember("OnEvent4")[0], elements[4].Reflect, "子类标记在方法上的元素特性的反射信息应当和所属方法相等。");
-            Assert.AreEqual("Hello OnEvent4", elements[4].Extras, "子类标记在方法上的元素特性的参数应当和设置的相等。");
+            Assert.AreEqual("Hello OnEvent4", elements[4].Extras[0], "子类标记在方法上的元素特性的参数应当和设置的相等。");
 
             Assert.AreEqual("MySubView Field Attr", elements[6].Name, "子类标记在字段上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type.GetMember("OnEvent4Called")[0], elements[6].Reflect, "子类标记在字段上的元素特性的反射信息应当和所属字段相等。");
 
             Assert.AreEqual("MySubView Field Attr Extras", elements[7].Name, "子类标记在字段上的元素特性的名称应当和设置的相等。");
             Assert.AreEqual(type.GetMember("OnEvent4Param1")[0], elements[7].Reflect, "子类标记在字段上的元素特性的反射信息应当和所属字段相等。");
-            Assert.AreEqual("Hello OnEvent4Param1", elements[7].Extras, "子类标记在字段上的元素特性的参数应当和设置的相等。");
+            Assert.AreEqual("Hello OnEvent4Param1", elements[7].Extras[0], "子类标记在字段上的元素特性的参数应当和设置的相等。");
         }
         #endregion
     }
