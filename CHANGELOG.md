@@ -1,7 +1,6 @@
 # 更新记录
 
 ## [0.0.5] - 2025-05-19
-
 ### 变更
 - 修改 XView.Elememt 特性的参数（extras）格式（string -> object[]）
 
