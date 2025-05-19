@@ -20,7 +20,7 @@ declare namespace CS {
             /**
              * 视图元素特性，支持自定义描述。
              * @param name 元素名称。
-             * @param method 自定义描述。
+             * @param extras 自定义描述。
              */
             export function Element(name: string, ...extras: any[]): (target: any, propertyKey: string) => void
         }
