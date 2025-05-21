@@ -2,7 +2,7 @@
   "name": "org.eframework.u3d.msv",
   "displayName": "EFramework Modulize for Unity",
   "description": "EFramework Modulize for Unity 是一个模块化开发框架，提供了 Module/Scene + View 架构的标准实现，支持模块管理、场景切换、视图控制等核心功能。",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "unity": "2021.3",
   "license": "MIT",
   "author": {
