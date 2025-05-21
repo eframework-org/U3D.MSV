@@ -1160,10 +1160,24 @@ namespace EFramework.Modulize
         /// <typeparam name="TModule">模块类型</typeparam>
         public class Base<TModule> : Base where TModule : XModule.IBase, new()
         {
+            private TModule module;
+
             /// <summary>
             /// 获取视图的模块实例。
             /// </summary>
-            public TModule Module { get => XModule.Base<TModule>.Instance; }
+            public TModule Module
+            {
+                get
+                {
+                    if (module == null)
+                    {
+                        var property = typeof(TModule).GetProperty("Instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+                        if (property != null) module = (TModule)property.GetValue(null);
+                        else module = new TModule();
+                    }
+                    return module;
+                }
+            }
 
             /// <summary>
             /// 获取视图的事件管理器。
