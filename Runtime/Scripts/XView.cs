@@ -1346,19 +1346,22 @@ namespace EFramework.Modulize
         public static IBase Open(IMeta target, params object[] args)
         {
             // [TONOTE]: 兼容js拦截函数参数类型匹配错误问题
-            if (args.Length > 0 && args[0] is Transform transform)
+            if (args != null)
             {
-                var nargs = new object[args.Length - 1];
-                Array.Copy(args, 1, nargs, 0, args.Length - 1);
-                return Open(target, transform, nargs);
+                if (args.Length > 0 && args[0] is Transform transform)
+                {
+                    var nargs = new object[args.Length - 1];
+                    Array.Copy(args, 1, nargs, 0, args.Length - 1);
+                    return Open(target, transform, nargs);
+                }
+                else if (args.Length > 2 && args[0] is IMeta meta && args[1] is IMeta meta1 && args[2] is Transform transform1)
+                {
+                    var nargs = new object[args.Length - 3];
+                    Array.Copy(args, 3, nargs, 0, args.Length - 3);
+                    return Open(target, meta, meta1, transform1, nargs);
+                }
             }
-            else if (args.Length > 2 && args[0] is IMeta meta && args[1] is IMeta meta1 && args[2] is Transform transform1)
-            {
-                var nargs = new object[args.Length - 3];
-                Array.Copy(args, 3, nargs, 0, args.Length - 3);
-                return Open(target, meta, meta1, transform1, nargs);
-            }
-            else return Open(target, null, null, null, args);
+            return Open(target, null, null, null, args);
         }
 
         /// <summary>
