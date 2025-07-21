@@ -1662,7 +1662,8 @@ namespace EFramework.Modulize
         /// </summary>
         /// <param name="meta">视图描述</param>
         /// <param name="resume">是否恢复焦点</param>
-        public static void Close(IMeta meta, bool resume = true)
+        /// <param name="destroy">是否强制删除</param>
+        public static void Close(IMeta meta, bool resume = true, bool destroy = false)
         {
             if (meta != null)
             {
@@ -1672,7 +1673,7 @@ namespace EFramework.Modulize
                     if (temp.Meta.Path == meta.Path)
                     {
                         openedView.RemoveAt(i);
-                        if (temp.Meta.Cache == CacheType.Shared || temp.Meta.Cache == CacheType.Scene)
+                        if ((temp.Meta.Cache == CacheType.Shared || temp.Meta.Cache == CacheType.Scene) && !destroy)
                         {
                             cachedView.Add(temp);
                             if (temp.Meta.Cache == CacheType.Shared) UnityEngine.Object.DontDestroyOnLoad(temp.Panel);
@@ -1682,7 +1683,7 @@ namespace EFramework.Modulize
                         {
                             focusedView.Remove(temp);
                             temp.Panel.SetActiveState(false);
-                            if (temp.Meta.Cache == CacheType.None)
+                            if (temp.Meta.Cache == CacheType.None || destroy)
                             {
                                 temp.Panel.DestroyGO(true);
                             }
@@ -1701,7 +1702,8 @@ namespace EFramework.Modulize
         /// </summary>
         /// <param name="view">视图实例</param>
         /// <param name="resume">是否恢复焦点</param>
-        public static void Close(IBase view, bool resume = true)
+        /// <param name="destroy">是否强制删除</param>
+        public static void Close(IBase view, bool resume = true, bool destroy = false)
         {
             if (view != null)
             {
@@ -1711,7 +1713,7 @@ namespace EFramework.Modulize
                     if (temp == view)
                     {
                         openedView.RemoveAt(i);
-                        if (temp.Meta.Cache == CacheType.Shared || temp.Meta.Cache == CacheType.Scene)
+                        if ((temp.Meta.Cache == CacheType.Shared || temp.Meta.Cache == CacheType.Scene) && !destroy)
                         {
                             cachedView.Add(temp);
                             if (temp.Meta.Cache == CacheType.Shared) UnityEngine.Object.DontDestroyOnLoad(temp.Panel);
@@ -1721,7 +1723,7 @@ namespace EFramework.Modulize
                         {
                             focusedView.Remove(temp);
                             temp.Panel.SetActiveState(false);
-                            if (temp.Meta.Cache == CacheType.None)
+                            if (temp.Meta.Cache == CacheType.None || destroy)
                             {
                                 temp.Panel.DestroyGO(true);
                             }
@@ -1756,6 +1758,55 @@ namespace EFramework.Modulize
                 }
 
                 if (close) Close(view.Meta, false);
+                else index++;
+            }
+
+            Resume();
+        }
+
+        /// <summary>
+        /// DestroyAll 关闭并销毁所有视图。
+        /// </summary>
+        /// <param name="exclude">排除的视图</param>
+        public static void DestroyAll(params IMeta[] exclude)
+        {
+            var index = 0;
+            while (index < openedView.Count)
+            {
+                var view = openedView[index];
+                var close = true;
+                for (var i = 0; i < exclude.Length; i++)
+                {
+                    if (view.Meta.Path == exclude[i].Path)
+                    {
+                        close = false;
+                        break;
+                    }
+                }
+
+                if (close) Close(view.Meta, false, true);
+                else index++;
+            }
+
+            index = 0;
+            while (index < cachedView.Count)
+            {
+                var view = cachedView[index];
+                var destroy = true;
+                for (var i = 0; i < exclude.Length; i++)
+                {
+                    if (view.Meta.Path == exclude[i].Path)
+                    {
+                        destroy = false;
+                        break;
+                    }
+                }
+
+                if (destroy)
+                {
+                    cachedView.RemoveAt(index);
+                    if (view.Panel) view.Panel.DestroyGO(true);
+                }
                 else index++;
             }
 

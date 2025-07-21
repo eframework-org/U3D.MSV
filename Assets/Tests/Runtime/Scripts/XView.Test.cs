@@ -175,7 +175,7 @@ public class TestXView
     public void Reset()
     {
         if (testPanel != null) UnityEngine.Object.Destroy(testPanel);
-        XView.CloseAll();
+        XView.DestroyAll();
     }
 
     #endregion
@@ -671,11 +671,26 @@ public class TestXView
         Assert.IsNotNull(view2);
         Assert.IsNotNull(view3);
 
-        XView.CloseAll(meta1); // 关闭除meta1外的所有界面
+        XView.Close(meta1);
+        Assert.IsFalse(view1.Panel.activeSelf, "视图1应当被关闭且处于非激活状态");
 
+        XView.Open(meta1);
+        XView.Close(view1);
+        Assert.IsFalse(view1.Panel.activeSelf, "视图1应当被关闭且处于非激活状态");
+
+        XView.Open(meta1);
+        XView.CloseAll(meta1); // 关闭除meta1外的所有界面
         Assert.IsTrue(view1.Panel.activeSelf, "排除的视图1应当保持激活状态");
         Assert.IsFalse(view2.Panel.activeSelf, "视图2应当被关闭且处于非激活状态");
         Assert.IsFalse(view3.Panel.activeSelf, "视图3应当被关闭且处于非激活状态");
+
+        XView.DestroyAll(meta1);
+        Assert.IsNotNull(view1.Panel, "排除的视图1应当不为空");
+        Assert.IsTrue(view2.Panel == null, "销毁的视图2应当为空");
+        Assert.IsTrue(view2.Panel == null, "销毁的视图3应当为空");
+
+        XView.DestroyAll();
+        Assert.IsTrue(view1.Panel == null, "销毁的视图1应当为空");
     }
 
     [Test]

@@ -1,5 +1,10 @@
 # 更新记录
 
+## [0.0.8] - 2025-07-21
+### 变更
+- 修改 XView.IHandler.Loaing 为 IsLoading
+- 新增 XView.DestroyAll 函数用于关闭并销毁所有视图
+
 ## [0.0.7] - 2025-06-11
 ### 修复
 - 修复 XView.Open 函数可变参数空异常的问题
