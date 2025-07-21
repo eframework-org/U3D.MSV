@@ -188,10 +188,13 @@ XView.OpenAsync(meta, callback, args);
 
 ```csharp
 // 关闭指定视图
-XView.Close(meta, resume);
+XView.Close(meta, resume, destroy);
 
 // 关闭所有视图
 XView.CloseAll(exclude);
+
+// 关闭并销毁所有视图
+XView.DestroyAll(exclude);
 ```
 
 #### 2.4 视图排序
