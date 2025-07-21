@@ -34,7 +34,7 @@
 ├── .github/                                   # 工作流目录
 │   └── workflows/*.yml                        # 工作流脚本
 │
-├── .puer/                                     # Puer模块目录
+├── .puer/                                     # Puer 模块目录
 │
 ├── Assets/
 │   ├── Editor/                                # 编辑器目录
