@@ -46,7 +46,7 @@ permissions:
 jobs:
   test:
     name: 测试 Unity${{ matrix.unityVersion }}.${{ matrix.testMode }} 环境
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     env:
       TZ: 'Asia/Shanghai'
     strategy:
