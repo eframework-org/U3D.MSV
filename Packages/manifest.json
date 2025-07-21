@@ -5,7 +5,7 @@
     "com.unity.ide.rider": "3.0.36",
     "com.unity.ide.visualstudio": "2.0.23",
     "com.unity.render-pipelines.universal": "17.1.0",
-    "com.unity.test-framework": "1.5.1",
+    "com.unity.test-framework": "1.4.6",
     "com.unity.timeline": "1.8.8",
     "com.unity.toolchain.win-x86_64-linux-x86_64": "2.0.10",
     "com.unity.ugui": "2.0.0",
@@ -48,14 +48,6 @@
       "url": "https://registry.npmjs.com",
       "scopes": [
         "org.eframework"
-      ]
-    },
-    {
-      "name": "OpenUPM",
-      "url": "https://package.openupm.com",
-      "scopes": [
-        "com.tencent.puerts.core",
-        "com.tencent.puerts.ts-loader"
       ]
     }
   ]
