@@ -51,7 +51,7 @@ public class TestXView
             callback?.Invoke(mockView, panel);
         }
 
-        public bool Loading(XView.IMeta meta) { return false; }
+        public bool IsLoading(XView.IMeta meta) { return false; }
 
         public void SetBinding(GameObject go, object target, XView.Element[] elements)
         {

@@ -8,9 +8,9 @@ EFramework Modulize for Unity 是一个模块化开发框架，提供了 Module/
 
 ## 功能特性
 
-- [XModule](Documentation~/XModule.md) 提供了业务开发的基础模块，支持模块的生命周期管理和事件系统集成
-- [XScene](Documentation~/XScene.md) 提供了业务开发的基础场景，支持业务场景的切换及其生命周期管理
-- [XView](Documentation~/XView.md) 提供了业务开发的基础视图，通过适配器模式实现了视图的管理功能
+- [XModule](Docs/XModule.md) 提供了业务开发的基础模块，支持模块的生命周期管理和事件系统集成
+- [XScene](Docs/XScene.md) 提供了业务开发的基础场景，支持业务场景的切换及其生命周期管理
+- [XView](Docs/XView.md) 提供了业务开发的基础视图，通过适配器模式实现了视图的管理功能
 
 ## 常见问题
 

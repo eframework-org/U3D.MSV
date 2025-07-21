@@ -30,5 +30,15 @@
   "puerAdapter": ".puer",
   "puerExports": [
     "EFramework.Modulize"
+  ],
+  "files": [
+    ".puer",
+    "Assets/Runtime",
+    "Assets/Runtime.meta",
+    "Docs",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE.md",
+    "package.json"
   ]
 }
