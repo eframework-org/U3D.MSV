@@ -217,115 +217,115 @@ namespace EFramework.Modulize
     public partial class XView
     {
         /// <summary>
-        /// 定义了视图的事件类型。
+        /// EventType 定义了视图的事件类型。
         /// </summary>
         public enum EventType
         {
             /// <summary>
-            /// 动态事件，会触发视图的焦点变化。
+            /// Dynamic 表示动态事件，会触发视图的焦点变化。
             /// </summary>
             Dynamic,
 
             /// <summary>
-            /// 静态事件，不会触发视图的焦点变化。
+            /// Static 表示静态事件，不会触发视图的焦点变化。
             /// </summary>
             Static,
 
             /// <summary>
-            /// 静默事件，不会触发视图的焦点变化和事件通知。
+            /// Slience 表示静默事件，不会触发视图的焦点变化和事件通知。
             /// </summary>
             Slience,
         }
 
         /// <summary>
-        /// 定义了视图的缓存类型。
+        /// CacheType 定义了视图的缓存类型。
         /// </summary>
         public enum CacheType
         {
             /// <summary>
-            /// 场景缓存，场景切换时会被清理。
+            /// Scene 表示场景级别的缓存，场景切换时会被清理。
             /// </summary>
             Scene,
 
             /// <summary>
-            /// 共享缓存，场景切换时不会被清理。
+            /// Shared 表示全局共享的缓存，场景切换时不会被清理。
             /// </summary>
             Shared,
 
             /// <summary>
-            /// 不缓存，关闭时会被销毁。
+            /// None 表示不启用缓存，关闭时会被销毁。
             /// </summary>
             None,
         }
 
         /// <summary>
-        /// 定义了视图的描述接口，包含视图的基本配置信息。
+        /// IMeta 定义了视图的描述接口，包含视图的基本配置信息。
         /// </summary>
         public interface IMeta
         {
             /// <summary>
-            /// 获取视图的预制体路径。
+            /// Path 获取视图的预制体路径。
             /// </summary>
             string Path { get; }
 
             /// <summary>
-            /// 获取视图的固定渲染顺序。
+            /// FixedRQ 获取视图的固定渲染顺序。
             /// </summary>
             int FixedRQ { get; }
 
             /// <summary>
-            /// 获取视图的事件类型。
+            /// Focus 获取视图的事件类型。
             /// </summary>
             EventType Focus { get; }
 
             /// <summary>
-            /// 获取视图的缓存类型。
+            /// Cache 获取视图的缓存类型。
             /// </summary>
             CacheType Cache { get; }
 
             /// <summary>
-            /// 获取是否允许多个实例。
+            /// Multiple 获取是否允许多个实例。
             /// </summary>
             bool Multiple { get; }
         }
 
         /// <summary>
-        /// 提供了视图的描述实现。
+        /// Meta 提供了视图的描述实现。
         /// </summary>
         public class Meta : IMeta
         {
             /// <summary>
-            /// 获取或设置视图的预制体路径。
+            /// Path 获取或设置视图的预制体路径。
             /// </summary>
             public string Path { get; set; }
 
             /// <summary>
-            /// 获取或设置视图的固定渲染顺序。
+            /// FixedRQ 获取或设置视图的固定渲染顺序。
             /// </summary>
             public int FixedRQ { get; set; }
 
             /// <summary>
-            /// 获取或设置视图的事件类型。
+            /// Focus 获取或设置视图的事件类型。
             /// </summary>
             public EventType Focus { get; set; }
 
             /// <summary>
-            /// 获取或设置视图的缓存类型。
+            /// Cache 获取或设置视图的缓存类型。
             /// </summary>
             public CacheType Cache { get; set; }
 
             /// <summary>
-            /// 获取或设置是否允许多个实例。
+            /// Multiple 获取或设置是否允许多个实例。
             /// </summary>
             public bool Multiple { get; set; }
 
             /// <summary>
-            /// 初始化描述。
+            /// Meta 初始化描述。
             /// </summary>
             public Meta() { }
 
             /// <summary>
-            /// 使用指定参数初始化描述。
+            /// Meta 使用指定参数初始化描述。
             /// </summary>
             /// <param name="path">预制体路径</param>
             /// <param name="fixedRQ">固定渲染顺序</param>
@@ -343,12 +343,12 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 定义了视图的加载处理器接口。
+        /// IHandler 定义了视图的加载处理器接口。
         /// </summary>
         public interface IHandler
         {
             /// <summary>
-            /// 同步加载视图。
+            /// Load 同步加载视图。
             /// </summary>
             /// <param name="meta">视图描述</param>
             /// <param name="parent">父级变换</param>
@@ -357,7 +357,7 @@ namespace EFramework.Modulize
             void Load(IMeta meta, Transform parent, out IBase view, out GameObject panel);
 
             /// <summary>
-            /// 异步加载视图。
+            /// LoadAsync 异步加载视图。
             /// </summary>
             /// <param name="meta">视图描述</param>
             /// <param name="parent">父级变换</param>
@@ -365,14 +365,14 @@ namespace EFramework.Modulize
             void LoadAsync(IMeta meta, Transform parent, Action<IBase, GameObject> callback);
 
             /// <summary>
-            /// 检查视图是否正在加载。
+            /// IsLoading 检查视图是否正在加载。
             /// </summary>
             /// <param name="meta">视图描述</param>
             /// <returns>是否正在加载</returns>
-            bool Loading(IMeta meta);
+            bool IsLoading(IMeta meta);
 
             /// <summary>
-            /// 设置视图的元素绑定。
+            /// SetBinding 设置视图的元素绑定。
             /// </summary>
             /// <param name="go">游戏对象</param>
             /// <param name="target">组件实例</param>
@@ -380,14 +380,14 @@ namespace EFramework.Modulize
             void SetBinding(GameObject go, object target, Element[] elements);
 
             /// <summary>
-            /// 设置视图的渲染顺序。
+            /// SetOrder 设置视图的渲染顺序。
             /// </summary>
             /// <param name="view">视图实例</param>
             /// <param name="order">渲染顺序</param>
             void SetOrder(IBase view, int order);
 
             /// <summary>
-            /// 设置视图的焦点状态。
+            /// SetFocus 设置视图的焦点状态。
             /// </summary>
             /// <param name="view">视图实例</param>
             /// <param name="focus">是否获得焦点</param>
@@ -395,36 +395,45 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 提供了视图的事件系统实现，支持事件注册、注销和通知。
+        /// Event 提供了视图的事件系统实现，支持事件注册、注销和通知。
         /// </summary>
         public class Event
         {
             /// <summary>
-            /// 事件代理类，用于管理事件回调的上下文。
+            /// Proxy 是事件代理类，用于管理事件回调的上下文。
             /// </summary>
             internal class Proxy
             {
+                /// <summary>
+                /// ID 是事件的标识。
+                /// </summary>
                 public int ID;
 
+                /// <summary>
+                /// Context 是事件的上下文实例。
+                /// </summary>
                 public XEvent.Manager Context;
 
+                /// <summary>
+                /// Callback 是事件的回调函数。
+                /// </summary>
                 public XEvent.Callback Callback;
             }
 
             /// <summary>
-            /// 事件上下文。
+            /// context 是事件的上下文实例。
             /// </summary>
             internal readonly XEvent.Manager context;
 
             /// <summary>
-            /// 事件代理容器。
+            /// proxies 是事件的代理容器。
             /// </summary>
             internal readonly Dictionary<int, List<Proxy>> proxies = new();
 
             public Event(XEvent.Manager context = null) { this.context = context ?? new XEvent.Manager(); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -453,7 +462,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -462,7 +471,7 @@ namespace EFramework.Modulize
             public virtual bool Reg(int eid, XEvent.Callback callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -472,7 +481,7 @@ namespace EFramework.Modulize
             public virtual bool Reg(Enum eid, XEvent.Callback callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -481,7 +490,7 @@ namespace EFramework.Modulize
             public virtual bool Reg(Enum eid, XEvent.Callback callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -517,7 +526,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -527,7 +536,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1>(int eid, Action<T1> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -538,7 +547,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1>(Enum eid, Action<T1> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -548,7 +557,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1>(Enum eid, Action<T1> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -586,7 +595,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -597,7 +606,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2>(int eid, Action<T1, T2> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -609,7 +618,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2>(Enum eid, Action<T1, T2> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -620,7 +629,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2>(Enum eid, Action<T1, T2> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -660,7 +669,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -672,7 +681,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2, T3>(int eid, Action<T1, T2, T3> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -685,7 +694,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback, XEvent.Manager manager = null, bool once = false) { return Reg(eid.GetHashCode(), callback, manager, once); }
 
             /// <summary>
-            /// 注册事件。
+            /// Reg 注册事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -697,7 +706,7 @@ namespace EFramework.Modulize
             public virtual bool Reg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback, bool once = false) { return Reg(eid, callback, null, once); }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -735,7 +744,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="callback">事件回调</param>
@@ -743,7 +752,7 @@ namespace EFramework.Modulize
             public virtual bool Unreg(Enum eid, XEvent.Callback callback = null) { return Unreg(eid.GetHashCode(), callback); }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -772,7 +781,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">参数类型</typeparam>
             /// <param name="eid">事件标识</param>
@@ -781,7 +790,7 @@ namespace EFramework.Modulize
             public virtual bool Unreg<T1>(Enum eid, Action<T1> callback) { return Unreg(eid.GetHashCode(), callback); }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -811,7 +820,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -824,7 +833,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -855,7 +864,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 注销事件。
+            /// Unreg 注销事件。
             /// </summary>
             /// <typeparam name="T1">第一个参数类型</typeparam>
             /// <typeparam name="T2">第二个参数类型</typeparam>
@@ -866,7 +875,7 @@ namespace EFramework.Modulize
             public virtual bool Unreg<T1, T2, T3>(Enum eid, Action<T1, T2, T3> callback) { return Unreg(eid.GetHashCode(), callback); }
 
             /// <summary>
-            /// 清除事件注册。
+            /// Clear 清除事件注册。
             /// </summary>
             public virtual void Clear()
             {
@@ -881,14 +890,14 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 通知事件。
+            /// Notify 通知事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="args">事件参数</param>
             public virtual void Notify(int eid, params object[] args) { context.Notify(eid, args); }
 
             /// <summary>
-            /// 通知事件。
+            /// Notify 通知事件。
             /// </summary>
             /// <param name="eid">事件标识</param>
             /// <param name="args">事件参数</param>
@@ -896,61 +905,61 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 定义了视图的基础接口。
+        /// IBase 定义了视图的基础接口。
         /// </summary>
         public interface IBase
         {
             /// <summary>
-            /// 获取或设置视图的描述。
+            /// Meta 获取或设置视图的描述。
             /// </summary>
             IMeta Meta { get; set; }
 
             /// <summary>
-            /// 获取或设置视图的面板对象。
+            /// Panel 获取或设置视图的面板对象。
             /// </summary>
             GameObject Panel { get; set; }
 
             /// <summary>
-            /// 视图打开时调用。
+            /// OnOpen 在视图打开时调用。
             /// </summary>
             /// <param name="args">打开参数</param>
             void OnOpen(params object[] args);
 
             /// <summary>
-            /// 视图获得焦点时调用。
+            /// OnFocus 在视图获得焦点时调用。
             /// </summary>
             void OnFocus();
 
             /// <summary>
-            /// 视图失去焦点时调用。
+            /// OnBlur 在视图失去焦点时调用。
             /// </summary>
             void OnBlur();
 
             /// <summary>
-            /// 视图关闭时调用。
+            /// OnClose 在视图关闭时调用。
             /// </summary>
             /// <param name="done">关闭完成回调</param>
             void OnClose(Action done);
         }
 
         /// <summary>
-        /// 视图元素特性，支持自定义描述。
+        /// Element 是视图元素特性，支持自定义描述。
         /// </summary>
         [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
         public sealed class Element : Attribute
         {
             /// <summary>
-            /// 元素名称。
+            /// Name 是元素的名称。
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// 自定义描述。
+            /// Extras 是自定义的描述。
             /// </summary>
             public object[] Extras { get; set; }
 
             /// <summary>
-            /// 反射信息。
+            /// Reflect 表示反射的信息。
             /// </summary>
             public object Reflect { get; set; }
 
@@ -961,12 +970,12 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 视图元素特性的全局缓存。
+            /// cached 是视图元素特性的全局缓存。
             /// </summary>
             internal static readonly Dictionary<Type, Element[]> cached = new();
 
             /// <summary>
-            /// 根据类型获取视图元素标记的特性。
+            /// Get 根据类型获取视图元素标记的特性。
             /// </summary>
             /// <param name="type">目标类型</param>
             /// <returns>标记的特性列表</returns>
@@ -1016,24 +1025,24 @@ namespace EFramework.Modulize
     public partial class XView
     {
         /// <summary>
-        /// 提供了视图的基础实现。
+        /// Base 提供了视图的基础实现。
         /// </summary>
         public class Base : MonoBehaviour, IBase
         {
             /// <summary>
-            /// 获取或设置视图的描述。
+            /// Meta 获取或设置视图的描述。
             /// </summary>
             public virtual IMeta Meta { get; set; }
 
             /// <summary>
-            /// 获取或设置视图的面板对象。
+            /// Panel 获取或设置视图的面板对象。
             /// </summary>
             public virtual GameObject Panel { get; set; }
 
             internal Event @event;
 
             /// <summary>
-            /// 获取视图的事件管理器。
+            /// Event 获取视图的事件管理器。
             /// </summary>
             public virtual Event Event
             {
@@ -1047,7 +1056,7 @@ namespace EFramework.Modulize
             internal XLog.LogTag tags;
 
             /// <summary>
-            /// 获取或设置视图的日志标签。
+            /// Tags 获取或设置视图的日志标签。
             /// </summary>
             public virtual XLog.LogTag Tags
             {
@@ -1066,18 +1075,18 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 初始化视图。
+            /// Base 初始化视图。
             /// </summary>
             public Base() { }
 
             /// <summary>
-            /// 使用代理初始化视图。
+            /// Base 使用代理实例初始化视图。
             /// </summary>
             /// <param name="proxy">代理对象</param>
             public Base(object proxy) { } // PuerTS 类型导出
 
             /// <summary>
-            /// 视图初始化时调用。
+            /// Awake 在视图初始化时调用。
             /// </summary>
             public virtual void Awake()
             {
@@ -1086,7 +1095,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 视图启用时调用。
+            /// OnEnable 在视图启用时调用。
             /// </summary>
             public virtual void OnEnable()
             {
@@ -1116,46 +1125,46 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 视图打开时调用。
+            /// OnOpen 在视图打开时调用。
             /// </summary>
             /// <param name="args">打开参数</param>
             public virtual void OnOpen(params object[] args) { }
 
             /// <summary>
-            /// 视图获得焦点时调用。
+            /// OnFocus 在视图获得焦点时调用。
             /// </summary>
             public virtual void OnFocus() { }
 
             /// <summary>
-            /// 视图失去焦点时调用。
+            /// OnBlur 在视图失去焦点时调用。
             /// </summary>
             public virtual void OnBlur() { }
 
             /// <summary>
-            /// 视图禁用时调用。
+            /// OnDisable 在视图禁用时调用。
             /// </summary>
             public virtual void OnDisable() { Event?.Clear(); }
 
             /// <summary>
-            /// 视图关闭时调用。
+            /// OnClose 在视图关闭时调用。
             /// </summary>
             /// <param name="done">关闭完成回调</param>
             public virtual void OnClose(Action done) { done(); }
 
             /// <summary>
-            /// 设置视图焦点。
+            /// Focus 设置视图焦点。
             /// </summary>
             public virtual void Focus() { XView.Focus(this); }
 
             /// <summary>
-            /// 关闭视图。
+            /// Close 关闭视图。
             /// </summary>
             /// <param name="resume">是否恢复焦点</param>
             public virtual void Close(bool resume = true) { XView.Close(this, resume); }
         }
 
         /// <summary>
-        /// 提供了带模块的视图基础实现。
+        /// Base 提供了带模块的视图基础实现。
         /// </summary>
         /// <typeparam name="TModule">模块类型</typeparam>
         public class Base<TModule> : Base where TModule : XModule.IBase, new()
@@ -1163,7 +1172,7 @@ namespace EFramework.Modulize
             private TModule module;
 
             /// <summary>
-            /// 获取视图的模块实例。
+            /// Module 获取视图的模块实例。
             /// </summary>
             public TModule Module
             {
@@ -1180,7 +1189,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 获取视图的事件管理器。
+            /// Event 获取视图的事件管理器。
             /// </summary>
             public override Event Event
             {
@@ -1192,7 +1201,7 @@ namespace EFramework.Modulize
             }
 
             /// <summary>
-            /// 获取或设置视图的日志标签。
+            /// Tags 获取或设置视图的日志标签。
             /// </summary>
             public override XLog.LogTag Tags
             {
@@ -1221,27 +1230,27 @@ namespace EFramework.Modulize
     public partial class XView
     {
         /// <summary>
-        /// 共享的视图加载处理器。
+        /// Handler 是共享的视图处理器。
         /// </summary>
         public static IHandler Handler { get; internal set; }
 
         /// <summary>
-        /// 缓存的视图列表。
+        /// cachedView 是缓存的视图列表。
         /// </summary>
         internal static List<IBase> cachedView = new();
 
         /// <summary>
-        /// 打开的视图列表。
+        /// openedView 是打开的视图列表。
         /// </summary>
         internal static List<IBase> openedView = new();
 
         /// <summary>
-        /// 获得焦点的视图字典。
+        /// focusedView 是获得焦点的视图字典。
         /// </summary>
         internal static readonly Dictionary<IBase, bool> focusedView = new();
 
         /// <summary>
-        /// 初始化视图系统。
+        /// Initialize 初始化视图系统。
         /// </summary>
         /// <param name="handler">视图加载处理器</param>
         public static void Initialize(IHandler handler)
@@ -1267,7 +1276,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 加载视图。
+        /// Load 加载视图。
         /// </summary>
         /// <param name="meta">视图描述</param>
         /// <param name="parent">父级变换</param>
@@ -1338,7 +1347,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 打开视图。
+        /// Open 打开视图。
         /// </summary>
         /// <param name="target">目标视图</param>
         /// <param name="args">打开参数</param>
@@ -1365,7 +1374,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 打开视图。
+        /// Open 打开视图。
         /// </summary>
         /// <param name="target">目标视图</param>
         /// <param name="parent">父级变换</param>
@@ -1374,7 +1383,7 @@ namespace EFramework.Modulize
         public static IBase Open(IMeta target, Transform parent, params object[] args) { return Open(target, null, null, parent, args); }
 
         /// <summary>
-        /// 打开视图。
+        /// Open 打开视图。
         /// </summary>
         /// <param name="target">目标视图</param>
         /// <param name="below">下方视图</param>
@@ -1394,15 +1403,27 @@ namespace EFramework.Modulize
             return view;
         }
 
+        /// <summary>
+        /// OpenAsync 异步打开视图。
+        /// </summary>
+        /// <param name="target">目标视图</param>
+        /// <param name="callback">打开完成回调</param>
+        /// <param name="args">打开参数</param>
+        /// <returns></returns>
         public static bool OpenAsync(IMeta target, Action<IBase> callback = null, params object[] args) { return OpenAsync(target, null, null, null, callback, args); }
 
-        public static bool OpenAsync(IMeta target, Transform parent, Action<IBase> callback = null, params object[] args)
-        {
-            return OpenAsync(target, null, null, parent, callback, args);
-        }
+        /// <summary>
+        /// OpenAsync 异步打开视图。
+        /// </summary>
+        /// <param name="target">目标视图</param>
+        /// <param name="parent">父级变换</param>
+        /// <param name="callback">打开完成回调</param>
+        /// <param name="args">打开参数</param>
+        /// <returns></returns>
+        public static bool OpenAsync(IMeta target, Transform parent, Action<IBase> callback = null, params object[] args) { return OpenAsync(target, null, null, parent, callback, args); }
 
         /// <summary>
-        /// 异步打开视图。
+        /// OpenAsync 异步打开视图。
         /// </summary>
         /// <param name="target">目标视图</param>
         /// <param name="below">下方视图</param>
@@ -1441,7 +1462,7 @@ namespace EFramework.Modulize
 
             if (view == null)
             {
-                if (!target.Multiple && Handler.Loading(target))
+                if (!target.Multiple && Handler.IsLoading(target))
                 {
                     try { callback?.Invoke(null); }
                     catch (Exception e) { XLog.Panic(e); }
@@ -1486,7 +1507,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 排序视图。
+        /// Sort 排序视图。
         /// </summary>
         /// <param name="view">目标视图</param>
         /// <param name="below">下方视图</param>
@@ -1590,7 +1611,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 设置视图焦点。
+        /// Focus 设置视图焦点。
         /// </summary>
         /// <param name="meta">视图描述</param>
         public static void Focus(IMeta meta)
@@ -1611,7 +1632,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 设置视图焦点。
+        /// Focus 设置视图焦点。
         /// </summary>
         /// <param name="view">视图实例</param>
         public static void Focus(IBase view)
@@ -1632,12 +1653,12 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 恢复视图焦点。
+        /// Resume 恢复视图焦点。
         /// </summary>
         public static void Resume() { Sort(null, null, null); }
 
         /// <summary>
-        /// 关闭视图。
+        /// Close 关闭视图。
         /// </summary>
         /// <param name="meta">视图描述</param>
         /// <param name="resume">是否恢复焦点</param>
@@ -1676,7 +1697,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 关闭视图。
+        /// Close 关闭视图。
         /// </summary>
         /// <param name="view">视图实例</param>
         /// <param name="resume">是否恢复焦点</param>
@@ -1715,7 +1736,7 @@ namespace EFramework.Modulize
         }
 
         /// <summary>
-        /// 关闭所有视图。
+        /// CloseAll 关闭所有视图。
         /// </summary>
         /// <param name="exclude">排除的视图</param>
         public static void CloseAll(params IMeta[] exclude)
