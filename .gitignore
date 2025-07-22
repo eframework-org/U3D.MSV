@@ -10,5 +10,11 @@
 /Temp
 /UserSettings
 /package-lock.md5
+CHANGELOG.md.meta
+LICENSE.md.meta
+package.json.meta
+README.md.meta
+Third Party Notices.md.meta
 *.csproj
 *.sln
+*.tgz

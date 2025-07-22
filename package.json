@@ -38,8 +38,8 @@
     "Assets/Editor.meta",
     "Assets/Runtime",
     "Assets/Runtime.meta",
-    "Docs",
-    "Docs.meta",
+    "Documentation~",
+    "Samples~",
     "CHANGELOG.md",
     "CHANGELOG.md.meta",
     "LICENSE.md",
@@ -47,11 +47,13 @@
     "package.json",
     "package.json.meta",
     "README.md",
-    "README.md.meta"
+    "README.md.meta",
+    "Third Party Notices.md",
+    "Third Party Notices.md.meta"
   ],
   "scripts": {
-    "gen-meta": "find ./Docs -type f ! -name '*.meta' -exec sh -c 'for f; do [ -f \"$f.meta\" ] || { guid=$(openssl rand -hex 16); printf \"fileFormatVersion: 2\\nguid: $guid\\n\" > \"$f.meta\"; }; done' _ {} + && for f in Assets Docs CHANGELOG.md LICENSE.md package.json README.md; do [ -f \"$f.meta\" ] || { guid=$(openssl rand -hex 16); printf \"fileFormatVersion: 2\\nguid: $guid\\n\" > \"$f.meta\"; }; done",
-    "clean-meta": "find ./Docs -name '*.meta' -delete && rm -f Assets.meta Docs.meta CHANGELOG.md.meta LICENSE.md.meta package.json.meta README.md.meta",
+    "gen-meta": "for f in 'Assets' 'CHANGELOG.md' 'LICENSE.md' 'package.json' 'README.md' 'Third Party Notices.md'; do [ -f \"$f.meta\" ] || { guid=$(openssl rand -hex 16); printf \"fileFormatVersion: 2\\nguid: $guid\\n\" > \"$f.meta\"; }; done",
+    "clean-meta": "rm -f 'Assets.meta' 'CHANGELOG.md.meta' 'LICENSE.md.meta' 'package.json.meta' 'README.md.meta' 'Third Party Notices.md.meta'",
     "prepack": "npm run gen-meta",
     "postpack": "npm run clean-meta"
   }

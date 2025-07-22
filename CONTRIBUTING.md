@@ -71,16 +71,20 @@
 │   │   └── ...
 │   └── ...
 │
-├── Docs/                                      # 文档目录
+├── Documentation~/                            # 文档目录
 │   ├── <Module1>.md                           # 模块1文档
 │   ├── <Module2>.md                           # 模块2文档
 │   └── ...
 │
-├── README.md                                  # 项目文档
+├── Samples~/                                  # 示例目录
+│
 ├── CHANGELOG.md                               # 更新记录
 ├── CONTRIBUTING.md                            # 贡献指南
 ├── LICENSE.md                                 # 开源协议
-└── package.json                               # 项目描述
+├── package.json                               # 项目描述
+├── README.md                                  # 项目文档
+├── Third Party Notices.md                     # 依赖说明
+└── ...
 ```
 
 ### 2. 命名规范
@@ -88,7 +92,7 @@
 1. 目录命名
    - 使用 PascalCase 命名法，如：`Hello`、`World`、`Greet`
    - 专有目录使用通用命名规范，如：`.github`、`workflows`、`node_modules`
-   - 遵循 [Unity Package Layout](https://docs.unity3d.com/Manual/cus-layout.html) 规范
+   - 基本遵循 [Unity Package Layout](https://docs.unity3d.com/Manual/cus-layout.html) 规范
 
 2. 文件命名
    - 源代码文件使用 PascalCase 命名法，如：`Hello.cs`、`Hello.Part02.cs`、`Greet.Test.cs`
@@ -134,8 +138,8 @@
 
 ## 功能特性
 
-- [<模块1名称>](Docs/<模块1名称>.md) <模块1简介>
-- [<模块2名称>](Docs/<模块2名称>.md) <模块2简介>
+- [<模块1名称>](Documentation~/<模块1名称>.md) <模块1简介>
+- [<模块2名称>](Documentation~/<模块2名称>.md) <模块2简介>
 - ...
 
 ## 常见问题
@@ -235,10 +239,10 @@ public class <模块名称> { }
 
 ##### 1. 项目级同步
 - 项目信息（`<项目目录>/package.json`）的项目描述应与项目文档（`<项目目录>/README.md`）保持一致，以项目文档为准
-- 项目文档（`<项目目录>/README.md`）功能特性章节中各模块的描述应与其文档（`Docs/<模块名称>.md`）保持一致，以模块文档为准
+- 项目文档（`<项目目录>/README.md`）功能特性章节中各模块的描述应与其文档（`Documentation~/<模块名称>.md`）保持一致，以模块文档为准
 
 ##### 2. 模块级同步
-- 模块文档（`Docs/<模块名称>.md`）具有最高优先级，是模块的主要文档
+- 模块文档（`Documentation~/<模块名称>.md`）具有最高优先级，是模块的主要文档
 - 模块源码（`<模块名称>.cs`）的注释应与模块文档保持一致，以模块文档为准
 - 项目文档（`<项目目录>/README.md`）中的模块描述应与模块文档保持一致，以模块文档为准
 
