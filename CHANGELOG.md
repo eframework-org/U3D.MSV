@@ -1,5 +1,9 @@
 # 更新记录
 
+## [0.0.9] - 2025-07-22
+### 修复
+- 修复 README.md 等文件元数据缺失的问题（Asset xxxx has no meta file...）
+
 ## [0.0.8] - 2025-07-21
 ### 变更
 - 修改 XView.IHandler.Loaing 为 IsLoading
