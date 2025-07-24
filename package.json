@@ -27,10 +27,6 @@
   "dependencies": {
     "org.eframework.u3d.util": "0.1.7"
   },
-  "puerAdapter": ".puer",
-  "puerExports": [
-    "EFramework.Modulize"
-  ],
   "files": [
     ".puer",
     "Editor",
@@ -49,5 +45,9 @@
     "README.md.meta",
     "Third Party Notices.md",
     "Third Party Notices.md.meta"
+  ],
+  "puerAdapter": ".puer",
+  "puerExports": [
+    "EFramework.Modulize"
   ]
 }
