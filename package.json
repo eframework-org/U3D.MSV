@@ -33,11 +33,10 @@
   ],
   "files": [
     ".puer",
-    "Assets.meta",
-    "Assets/Editor",
-    "Assets/Editor.meta",
-    "Assets/Runtime",
-    "Assets/Runtime.meta",
+    "Editor",
+    "Editor.meta",
+    "Runtime",
+    "Runtime.meta",
     "Documentation~",
     "Samples~",
     "CHANGELOG.md",
@@ -50,11 +49,5 @@
     "README.md.meta",
     "Third Party Notices.md",
     "Third Party Notices.md.meta"
-  ],
-  "scripts": {
-    "gen-meta": "for f in 'Assets' 'CHANGELOG.md' 'LICENSE.md' 'package.json' 'README.md' 'Third Party Notices.md'; do [ -f \"$f.meta\" ] || { guid=$(openssl rand -hex 16); printf \"fileFormatVersion: 2\\nguid: $guid\\n\" > \"$f.meta\"; }; done",
-    "clean-meta": "rm -f 'Assets.meta' 'CHANGELOG.md.meta' 'LICENSE.md.meta' 'package.json.meta' 'README.md.meta' 'Third Party Notices.md.meta'",
-    "prepack": "npm run gen-meta",
-    "postpack": "npm run clean-meta"
-  }
+  ]
 }

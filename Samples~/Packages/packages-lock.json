@@ -70,6 +70,14 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
+    "org.eframework.u3d.msv": {
+      "version": "file:../../",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "org.eframework.u3d.util": "0.1.7"
+      }
+    },
     "org.eframework.u3d.util": {
       "version": "0.1.7",
       "depth": 0,
