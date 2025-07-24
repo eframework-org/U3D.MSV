@@ -80,7 +80,7 @@
     },
     "org.eframework.u3d.util": {
       "version": "0.1.7",
-      "depth": 0,
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://registry.npmjs.com"
