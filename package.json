@@ -24,9 +24,6 @@
     "unity",
     "modulize"
   ],
-  "dependencies": {
-    "org.eframework.u3d.util": "0.1.7"
-  },
   "files": [
     ".puer",
     "Editor",
@@ -49,5 +46,8 @@
   "puerAdapter": ".puer",
   "puerExports": [
     "EFramework.Modulize"
-  ]
+  ],
+  "dependencies": {
+    "org.eframework.u3d.util": "0.1.7"
+  }
 }
